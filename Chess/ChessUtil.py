@@ -8,15 +8,11 @@ Result tag:
 0-1: black wins
 1/2-1/2: draw
 *: game still in progress, game abandoned, result unknown
-"""
 
-"""
 A structure to hold:
 board state (8x8x12 array)
 moves remaining until the end of the game
 result of the game
-
-example to get white pawns: print(bstate[:,:,0])
 """
 class DataParser:
 

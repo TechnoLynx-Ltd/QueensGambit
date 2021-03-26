@@ -117,6 +117,7 @@ def draw_game_state(screen, gs, valid_moves, selected_square):
     draw_pieces(screen, gs.board)
 
 
+
 """
 Draw squares
 """
@@ -143,10 +144,11 @@ def draw_pieces(screen, board):
                 screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
-
 """
 Highlight possible moves
 """
+
+
 def highlight_square(screen, gs, valid_moves, selected_square):
     if selected_square != ():
         r, c = selected_square
@@ -160,10 +162,10 @@ def highlight_square(screen, gs, valid_moves, selected_square):
                 if move.start_row == r and move.start_col == c:
                     screen.blit(s, (move.end_col*SQ_SIZE, move.end_row*SQ_SIZE))
 
+
 """
 Print text on board
 """
-
 def draw_text(screen, text):
     font = p.font.SysFont("Helvetica", 32, True, False)
     text_object = font.render(text, 0, p.Color("blue"))
@@ -201,34 +203,9 @@ def play_human_turn(selected_square, player_clicks, valid_moves, gs, made_move):
 
 if __name__ == "__main__":
 
-    # start = datetime.datetime.now()
-    #
-    # for i in range(1000):
-    #     myboard = board = chess.Board("r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4")
-    #     myboard.legal_moves
-    #
-    # end = datetime.datetime.now()
-    # delta = end - start
-    # print("chess module")
-    # print(delta.total_seconds() * 1000)
 
-    # start = datetime.datetime.now()
-    # for i in range(1000):
-    #     gs = ChessEngine.GameState()
-    #     gs.get_valid_moves()
-    # end = datetime.datetime.now()
-    # delta = end - start
-    # print("mine:")
-    # print(delta.total_seconds() * 1000)
+    main()
 
+    # dparser = ChessUtil.DataParser()
+    # dparser.file_test()
 
-    # main()
-    # ChessUtil.read_pgn("100.pgn")
-    dparser = ChessUtil.DataParser()
-
-
-
-    # dparser.save_to_file("test.npy")
-    dparser.file_test()
-    # array = dparser.load_data_from_file()
-    # print(array.shape)
