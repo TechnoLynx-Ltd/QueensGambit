@@ -1,5 +1,4 @@
 import copy
-import datetime
 
 
 class GameState:
@@ -177,7 +176,6 @@ class GameState:
     All moves considering checks
     """
     def get_valid_moves(self):
-        start = datetime.datetime.now()
         moves = []
         self.in_check, self.pins, self.checks = self.get_pins_checks()
         if self.white_to_move:
@@ -218,9 +216,6 @@ class GameState:
             else:
                 self.stalemate = True
 
-        end = datetime.datetime.now()
-        delta = end - start
-        print(delta.total_seconds() * 1000)
         return moves
 
     """
@@ -267,7 +262,6 @@ class GameState:
                             break  # at least more than one piece blocking so it's not a pin
                     elif end_piece[0] == ecolor:
                         type = end_piece[1]
-                        # TODO: make clearer which direction we are searching for what
                         if (0 <= j <= 3 and type == "R") or \
                                 (4 <= j <= 7 and type == "B") or \
                                 (i == 1 and type == "P" and ((ecolor == "w" and 6 <= j <= 7) or (ecolor == "b" and 4 <= j <= 5))) or \
@@ -344,8 +338,6 @@ class GameState:
                         moves.append(Move((r, c), (r+1, c+1), self.board))
                     elif self.en_passant_loc == (r+1, c+1):
                         moves.append(Move((r, c), (r+1, c+1), self.board, en_passant_move=True))
-
-        ## add promotions
 
     def get_rook_moves(self, r, c, moves):
         pin_dir, pinned = self.get_pin_state(r, c)
@@ -495,6 +487,7 @@ class CastleRights:
         self.bks = bks,
         self.wqs = wqs,
         self.bqs = bqs
+
 
 class Move:
     rank_to_row = {'1': 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
