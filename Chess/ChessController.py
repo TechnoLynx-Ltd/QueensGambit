@@ -225,4 +225,10 @@ if __name__ == "__main__":
     # main()
     # ChessUtil.read_pgn("100.pgn")
     dparser = ChessUtil.DataParser()
-    dparser.parse_pgn("ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn")
+
+
+
+    # dparser.save_to_file("test.npy")
+    dparser.file_test()
+    # array = dparser.load_data_from_file()
+    # print(array.shape)
