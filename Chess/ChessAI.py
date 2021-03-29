@@ -10,13 +10,10 @@ piece_weights = {
     'K': 0
 }
 
-
-
-
-
 CHECKMATE = 1000
 STALEMATE = 0
 DEPTH = 2
+
 
 def find_rand_move(valid_moves):
     chosen_move = random.choice(valid_moves)
@@ -41,6 +38,7 @@ def find_greedy_move(gs, valid_moves):
             best_move = player_move
         gs.undo_move()
     return best_move
+
 
 def find_minmax_move(gs, valid_moves, depth, white_to_move, alpha, beta):
     global next_move
@@ -87,6 +85,7 @@ def find_minmax_best_move(gs, valid_moves):
     find_minmax_move(gs, valid_moves, DEPTH, gs.white_to_move, -CHECKMATE, CHECKMATE)
     return next_move
 
+
 def score_material(board):
     score = 0
     for row in board:
@@ -98,10 +97,13 @@ def score_material(board):
 
     return score
 
+
 """
 Positive score -> white
 Negative score -> black
 """
+
+
 def score_board(gs):
     if gs.checkmate:
         if gs.white_to_move:
@@ -119,4 +121,3 @@ def score_board(gs):
             else:
                 score -= piece_weights[square[1]]
     return score
-

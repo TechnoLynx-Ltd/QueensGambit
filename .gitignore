@@ -3,3 +3,5 @@
 /Chess/100.pgn
 /Chess/*.npy
 /Chess/__pycache__/*
+
+.idea/

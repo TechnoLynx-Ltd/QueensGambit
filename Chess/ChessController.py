@@ -9,39 +9,33 @@ import datetime
 import brython
 import ChessUtil
 
-
 WIDTH = HEIGHT = 512
 DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-"""
-Sanity check
-"""
-
 
 def print_workspace():
+    """
+    Sanity check
+    """
     print(os.listdir())
 
 
-"""
-Initialize images.
-"""
-
-
 def init_images():
+    """
+    Initialize images
+    """
     pieces = ["bB", "bK", "bN", "bP", "bQ", "bR", "wB", "wK", "wN", "wP", "wQ", "wR"]
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
 
-"""
-Main driver.
-"""
-
-
 def main():
+    """
+    Main driver
+    """
     p.init()
     screen = p.display.set_mode((WIDTH, HEIGHT))
     clock = p.time.Clock()
@@ -54,7 +48,7 @@ def main():
     valid_moves = gs.get_valid_moves()
     made_move = False
     game_over = False
-    white_ai = False
+    white_ai = True
     black_ai = False
 
     while running:
@@ -65,7 +59,8 @@ def main():
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
                 if not game_over and human_turn:
-                    selected_square, player_clicks, made_move = play_human_turn(selected_square, player_clicks, valid_moves, gs,  made_move)
+                    selected_square, player_clicks, made_move = play_human_turn(selected_square, player_clicks,
+                                                                                valid_moves, gs, made_move)
 
                 elif not game_over and not human_turn:
                     chosen_move = ChessAI.find_minmax_best_move(gs, valid_moves)
@@ -84,7 +79,6 @@ def main():
                     player_clicks = []
                     made_move = False
                     game_over = False
-
 
         if made_move:
             valid_moves = gs.get_valid_moves()
@@ -106,24 +100,19 @@ def main():
         p.display.flip()
 
 
-"""
-Graphics handler methods.
-"""
-
-
 def draw_game_state(screen, gs, valid_moves, selected_square):
+    """
+    Graphics handler methods
+    """
     draw_board(screen)
     highlight_square(screen, gs, valid_moves, selected_square)
     draw_pieces(screen, gs.board)
 
 
-
-"""
-Draw squares
-"""
-
-
 def draw_board(screen):
+    """
+    Draw squares
+    """
     colors = [p.Color("white"), p.Color("gray")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
@@ -131,12 +120,10 @@ def draw_board(screen):
             p.draw.rect(screen, color, p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
-"""
-Draw pieces
-"""
-
-
 def draw_pieces(screen, board):
+    """
+    Draw pieces
+    """
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = board[r][c]
@@ -144,43 +131,43 @@ def draw_pieces(screen, board):
                 screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
-"""
-Highlight possible moves
-"""
-
-
 def highlight_square(screen, gs, valid_moves, selected_square):
+    """
+    Highlight possible moves
+    """
     if selected_square != ():
         r, c = selected_square
         if gs.board[r][c][0] == ("w" if gs.white_to_move else "b"):
             s = p.Surface((SQ_SIZE, SQ_SIZE))
             s.set_alpha(100)
             s.fill(p.Color('green'))
-            screen.blit(s, (c*SQ_SIZE, r*SQ_SIZE))
+            screen.blit(s, (c * SQ_SIZE, r * SQ_SIZE))
             s.fill(p.Color("red"))
             for move in valid_moves:
                 if move.start_row == r and move.start_col == c:
-                    screen.blit(s, (move.end_col*SQ_SIZE, move.end_row*SQ_SIZE))
+                    screen.blit(s, (move.end_col * SQ_SIZE, move.end_row * SQ_SIZE))
 
 
-"""
-Print text on board
-"""
 def draw_text(screen, text):
+    """
+    Print text on board
+    """
     font = p.font.SysFont("Helvetica", 32, True, False)
     text_object = font.render(text, 0, p.Color("blue"))
-    text_loc = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH/2 - text_object.get_width()/2, HEIGHT/2 - text_object.get_height()/2)
+    text_loc = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH / 2 - text_object.get_width() / 2,
+                                                HEIGHT / 2 - text_object.get_height() / 2)
     screen.blit(text_object, text_loc)
 
 
-"""
-Play human turn
-"""
 def play_human_turn(selected_square, player_clicks, valid_moves, gs, made_move):
+    """
+    Play human turn
+    """
     location = p.mouse.get_pos()
     col = location[0] // SQ_SIZE
     row = location[1] // SQ_SIZE
-    # if the user clicked the same square twice
+
+    # If the user clicked the same square twice
     if selected_square == (row, col):
         selected_square == ()
         player_clicks = []
@@ -202,10 +189,7 @@ def play_human_turn(selected_square, player_clicks, valid_moves, gs, made_move):
 
 
 if __name__ == "__main__":
-
-
     main()
 
     # dparser = ChessUtil.DataParser()
     # dparser.file_test()
-
