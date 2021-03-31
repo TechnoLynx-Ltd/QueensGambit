@@ -66,6 +66,7 @@ class GameState:
                     self.cur_castle_rights.wks = False
 
     def make_move(self, move):
+        # TODO - AttributeError: 'NoneType' object has no attribute 'start_row'
         self.board[move.start_row][move.start_col] = "--"
 
         if move.promotion_move:
