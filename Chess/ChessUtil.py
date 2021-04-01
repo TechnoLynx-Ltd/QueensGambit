@@ -15,205 +15,197 @@ moves remaining until the end of the game
 result of the game
 """
 
+all_ending_reasons = {'White forfeits on time',
+                      'White forfeits by disconnection',
+                      'Black checkmated',
+                      'Black forfeits on time',
+                      'Game drawn by repetition',
+                      'Game drawn by mutual agreement',
+                      'White wins by adjudication',
+                      'Black wins by adjudication',
+                      'Black forfeits by disconnection',
+                      'Game drawn by stalemate',
+                      'White checkmated',
+                      'Neither player has mating material',
+                      'Game drawn because both players ran out of time',
+                      'White resigns',
+                      'White ran out of time and Black has no material to mate',
+                      'Game drawn by the 50 move rule',
+                      'Black resigns',
+                      'Black ran out of time and White has no material to mate'}
 
-# all_ending_reasons = {'White forfeits on time',
-#                       'White forfeits by disconnection',
-#                       'Black checkmated',
-#                       'Black forfeits on time',
-#                       'Game drawn by repetition',
-#                       'Game drawn by mutual agreement',
-#                       'White wins by adjudication',
-#                       'Black forfeits by disconnection',
-#                       'Game drawn by stalemate',
-#                       'White checkmated',
-#                       'Neither player has mating material',
-#                       'Game drawn because both players ran out of time',
-#                       'White resigns',
-#                       'White ran out of time and Black has no material to mate',
-#                       'Game drawn by the 50 move rule',
-#                       'Black resigns',
-#                       'Black ran out of time and White has no material to mate'}
+position_dict = {'P': 0, 'R': 1, 'N': 2, 'B': 3, 'Q': 4, 'K': 5,
+                 'p': 6, 'r': 7, 'n': 8, 'b': 9, 'q': 10, 'k': 11}
 
 
-class DataParser:
+def parse_result(game):
+    """
+    Reads result of Game object and converts into dual category
+    :param game: chess.pgn.Game
+    :return result: np.ndarry
+    """
+    assert type(game) is chess.pgn.Game
 
-    def __init__(self):
-        self.piece_pos_shape = (8, 8, 12)
-        self.position_dict = {
-            'P': 0,
-            'R': 1,
-            'N': 2,
-            'B': 3,
-            'Q': 4,
-            'K': 5,
-            'p': 6,
-            'r': 7,
-            'n': 8,
-            'b': 9,
-            'q': 10,
-            'k': 11
+    # Game object in string format
+    game_str = str(game)
 
-        }
+    # Find reason of game ending
+    start = game_str.rfind('{')
+    end = game_str.rfind('}')
+    end_reason = game_str[start + 1: end].strip()
 
-    def parse_result(self, game):
-        """
-        Reads result of Game object and converts into dual class
-        :param game: chess.pgn.Game
-        :return result: np.ndarry
-        """
-        assert type(game) is chess.pgn.Game
+    # If ending reason is not due to game performance return None
+    non_performance_ending_reasons = {'White forfeits on time',
+                                      'Black forfeits on time',
+                                      'White wins by adjudication',
+                                      'Black wins by adjudication',
+                                      'White forfeits by disconnection',
+                                      'Black forfeits by disconnection',
+                                      'Game drawn because both players ran out of time',
+                                      'White ran out of time and Black has no material to mate',
+                                      'Black ran out of time and White has no material to mate'}
 
-        # Game object in string format
-        game_str = str(game)
+    if end_reason in non_performance_ending_reasons:
+        return None
 
-        # Find reason of game ending
-        start = game_str.rfind('{')
-        end = game_str.rfind('}')
-        end_reason = game_str[start + 1: end].strip()
+    # Result is a dual category label
+    result = np.zeros((2,), dtype=np.int8)
 
-        # If ending reason is not due to game performance return None
-        non_performance_ending_reasons = {'White forfeits on time',
-                                          'Black forfeits on time',
-                                          'White wins by adjudication',
-                                          'Black wins by adjudication',
-                                          'White forfeits by disconnection',
-                                          'Black forfeits by disconnection',
-                                          'Game drawn because both players ran out of time',
-                                          'White ran out of time and Black has no material to mate',
-                                          'Black ran out of time and White has no material to mate'}
+    # Result in game info
+    if '[Result "1-0"]' in game_str:
+        # White wins
+        result[0] = 1
+        result_info = "1-0"
+    elif '[Result "0-1"]' in game_str:
+        # Black wins
+        result_info = "0-1"
+        result[1] = 1
+    elif '[Result "1/2-1/2"]' in game_str:
+        # Draw
+        result_info = "1/2-1/2"
+    else:
+        raise Exception(f'Unknown result in game info: \n {game_str}')
 
-        if end_reason in non_performance_ending_reasons:
-            return None
+    # Result at end of moves list
+    result_end = game_str.split(" ")[-1]
 
-        # Result is a dual class label
-        result = np.zeros((2,), dtype=np.int8)
+    # Info redundancy check
+    assert result_end == result_info
 
-        # Result in game info
-        if '[Result "1-0"]' in game_str:
-            # White wins
-            result[0] = 1
-            result_info = "1-0"
-        elif '[Result "0-1"]' in game_str:
-            # Black wins
-            result_info = "0-1"
-            result[1] = 1
-        elif '[Result "1/2-1/2"]' in game_str:
-            # Draw
-            result_info = "1/2-1/2"
-        else:
-            raise Exception(f'Unknown result in game info: \n {game_str}')
+    return result
 
-        # Result at end of moves list
-        result_end = game_str.split(" ")[-1]
 
-        # Info redundancy check
-        assert result_end == result_info
+def parse_board(board):
+    """
+    Parse Board object to ndarray of size 8x8x12
+    :param board: chess.Board
+    :return piece_positions: np.ndarray
+    """
+    assert type(board) is chess.Board
 
-        return result
+    piece_positions = np.zeros((8, 8, 12), dtype=np.int8)
 
-    def parse_board(self, board_string):
-        piece_positions = np.zeros(self.piece_pos_shape, dtype=np.int8)
-        lines = board_string.split("\n")
-        for i, line in enumerate(lines):
-            positions = line.split(" ")
-            for j, pos in enumerate(positions):
-                if pos != ".":
-                    piece_positions[i, j, self.position_dict[pos]] = 1
+    lines = str(board).split("\n")
+    for i, line in enumerate(lines):
+        positions = line.split(" ")
+        for j, pos in enumerate(positions):
+            if pos != ".":
+                piece_positions[i, j, position_dict[pos]] = 1
 
-        return piece_positions
+    return piece_positions
 
-    def parse_pgn(self, filename, limit=10000, save_to_file=False):
-        with open(filename, 'r') as pgn:
 
-            # Dataset is built by appending to lists b/c it is faster than appending to np.ndarrays
-            inputs = []
-            results = []
-            moves = []
+def parse_pgn(filename, limit=100, save_to_file=False):
+    with open(filename, 'r') as pgn:
 
-            loop_count = 0
-            while loop_count < limit:
-                print(loop_count)
-                loop_count += 1
+        # Dataset is built by appending to lists b/c it is faster than appending to np.ndarrays
+        inputs = []
+        results = []
+        moves = []
 
-                # Parse .pgn file to Game object
-                game = chess.pgn.read_game(pgn)
+        loop_count = 0
+        while loop_count < limit:
+            print(loop_count)
+            loop_count += 1
 
-                # Stop parsing at the end of .pgn file
-                if game is None:
-                    break
+            # Parse .pgn file to Game object
+            game = chess.pgn.read_game(pgn)
 
-                board = game.board()
-                move_idx = 1
-                move_count = game.end().ply()
+            # Stop parsing at the end of .pgn file
+            if game is None:
+                break
 
-                # Parse result
-                result = self.parse_result(game)
+            board = game.board()
+            move_count = game.end().ply()
 
-                # Move to next game if result is not acceptable
-                if result is None:
-                    continue
+            # Parse result
+            result = parse_result(game)
 
-                # Parse moves
-                for move in game.mainline_moves():
-                    board.push(move)
-                    board_string = str(board)
-                    moves_left = move_count - move_idx
-                    piece_positions = self.parse_board(board_string)
+            # Move to next game if result is not acceptable
+            if result is None:
+                continue
 
-                    # Build dataset
-                    inputs.append(piece_positions)
-                    results.append(result)
-                    moves.append(moves_left)
+            # Parse moves
+            for move_idx, move in enumerate(game.mainline_moves()):
+                board.push(move)
+                piece_positions = parse_board(board)
 
-                    move_idx += 1
+                moves_left = move_count - (move_idx + 1)
 
-        # Convert extracted data
-        inputs = np.array(inputs)
-        print(inputs.shape)
-        results = np.array(results)
-        print(results.shape)
-        # TODO - check moves, test and convert
+                # Build dataset
+                inputs.append(piece_positions)
+                results.append(result)
+                moves.append(moves_left)
 
-        if save_to_file:
-            print("Saving inputs and targets to file...")
-            with open("input.npy", 'wb') as input_file:
-                np.save(input_file, np.stack(inputs, axis=0))
-            with open("target.npy", "wb") as target_file:
-                np.save(target_file, np.stack(results, axis=0))
-            with open("moves_left.npy", "wb") as moves_left_file:
-                np.save(moves_left_file, np.stack(moves, axis=0))
+    # Convert extracted data
+    inputs = np.array(inputs)
+    print(inputs.shape)
+    results = np.array(results)
+    print(results.shape)
+    moves = np.array(moves)
+    print(moves.shape)
 
-        return inputs, results, moves
+    if save_to_file:
+        print("Saving inputs and targets to file...")
+        with open("input.npy", 'wb') as input_file:
+            np.save(input_file, np.stack(inputs, axis=0))
+        with open("target.npy", "wb") as target_file:
+            np.save(target_file, np.stack(results, axis=0))
+        with open("moves_left.npy", "wb") as moves_left_file:
+            np.save(moves_left_file, np.stack(moves, axis=0))
 
-    def load_data_from_file(self):
-        inputs = np.load("input.npy")
-        results = np.load("target.npy")
-        moves = np.load("moves_left.npy")
-        return inputs, results, moves
+    return inputs, results, moves
 
-    def file_test(self):
-        # inputs, results, moves = self.parse_pgn("ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn")
-        inputs = np.load("input.npy")
-        results = np.load("target.npy")
-        moves = np.load("moves_left.npy")
-        print(len(inputs))
-        print(len(results))
-        print(len(moves))
-        print(inputs[0][:, :, 0])
-        print(moves[0])
-        inputs = np.stack(inputs, axis=0)
-        results = np.stack(results, axis=0)
-        moves = np.stack(moves, axis=0)
-        print(inputs.shape)
-        print(inputs[0, :, :, 0])
 
-        print(results.shape)
-        # print(inputs[0, :, :, 0])
+def load_data_from_file():
+    inputs = np.load("input.npy")
+    results = np.load("target.npy")
+    moves = np.load("moves_left.npy")
+    return inputs, results, moves
 
-        print(moves.shape)
-        # print(inputs[0, :, :, 0])
+
+def file_test():
+    # inputs, results, moves = self.parse_pgn("ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn")
+    inputs = np.load("input.npy")
+    results = np.load("target.npy")
+    moves = np.load("moves_left.npy")
+    print(len(inputs))
+    print(len(results))
+    print(len(moves))
+    print(inputs[0][:, :, 0])
+    print(moves[0])
+    inputs = np.stack(inputs, axis=0)
+    results = np.stack(results, axis=0)
+    moves = np.stack(moves, axis=0)
+    print(inputs.shape)
+    print(inputs[0, :, :, 0])
+
+    print(results.shape)
+    # print(inputs[0, :, :, 0])
+
+    print(moves.shape)
+    # print(inputs[0, :, :, 0])
 
 
 if __name__ == '__main__':
-    dp = DataParser()
-    dp.parse_pgn('data/ficsgamesdb_202101_standard2000_nomovetimes_197232.pgn')
+    inputs_, results_, moves_ = parse_pgn('data/ficsgamesdb_202101_standard2000_nomovetimes_197232.pgn')
