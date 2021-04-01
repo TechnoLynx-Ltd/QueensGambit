@@ -5,9 +5,6 @@ import pygame as p
 import os
 from Chess import ChessEngine
 import ChessAI
-import datetime
-import brython
-import ChessUtil
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8

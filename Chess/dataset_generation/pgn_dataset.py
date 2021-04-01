@@ -208,4 +208,4 @@ def file_test():
 
 
 if __name__ == '__main__':
-    inputs_, results_, moves_ = parse_pgn('data/ficsgamesdb_202101_standard2000_nomovetimes_197232.pgn')
+    inputs_, results_, moves_ = parse_pgn('../data/ficsgamesdb_202101_standard2000_nomovetimes_197232.pgn')
