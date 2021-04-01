@@ -1,13 +1,15 @@
 venv/
 
+__pycache__/
+
+.pyc
+
+.idea/
+
+Chess/data
+
 Chess/ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn
 
 Chess/100.pgn
 
 Chess/*.npy
-
-Chess/__pycache__/*
-
-Chess/data
-
-.idea/

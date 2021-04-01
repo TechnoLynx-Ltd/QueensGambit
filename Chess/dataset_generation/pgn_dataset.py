@@ -1,5 +1,6 @@
 import chess.pgn
 import h5py
+import math
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -38,10 +39,10 @@ position_dict = {'P': 0, 'R': 1, 'N': 2, 'B': 3, 'Q': 4, 'K': 5,
 
 def parse_result(game):
     """
-    Reads result of Game object and converts into {}
+    Reads result of Game object and converts into string of "1-0", "0-1" or "1/2-1/2"
     *: game still in progress, game abandoned, result unknown
     :param game: chess.pgn.Game
-    :return result: np.ndarry
+    :return result_info: str
     """
     assert type(game) is chess.pgn.Game
 
@@ -57,22 +58,15 @@ def parse_result(game):
     if end_reason in non_performance_ending_reasons:
         return None
 
-    # Result is a {}
-    result = np.zeros((2,), dtype=float)
-
     # Result in game info
     if '[Result "1-0"]' in game_str:
         # White wins
-        result[0] = 1
         result_info = "1-0"
     elif '[Result "0-1"]' in game_str:
         # Black wins
-        result[1] = 1
         result_info = "0-1"
     elif '[Result "1/2-1/2"]' in game_str:
         # Draw
-        result[0] = .5
-        result[1] = .5
         result_info = "1/2-1/2"
     else:
         raise Exception(f'Unknown result in game info: \n {game_str}')
@@ -83,7 +77,44 @@ def parse_result(game):
     # Info redundancy check
     assert result_end == result_info
 
-    return result
+    return result_info
+
+
+def approx_pos_score(result, move_idx, move_count):
+    """
+    Approximate a board score based on game progress and final result
+    :param result:
+    :param move_idx:
+    :param move_count:
+    :return: : np.ndarry
+    """
+    assert result in ['1-0', '0-1', '1/2-1/2']
+    assert move_idx <= move_count
+
+    # Result is a binary exclusive class
+    pos_score = np.zeros((2,), dtype=float)
+
+    # Weight is in exponential relation with game's move progress: float from 0 to 1
+    # Factor can go up to 1000 or even more, check link:
+    # https://www.wolframalpha.com/input/?i=%281000%5Ex+-+1%29+%2F+%281000+-+1%29+from+0+to+1
+    factor = 10
+    weight = (factor ** (move_idx / move_count) - 1) / (factor - 1)
+    assert 0 <= weight <= 1
+
+    if result == '1-0':
+        # White wins
+        pos_score[0] = .5 + (.5 * weight)
+    elif result == '0-1':
+        # Black wins
+        pos_score[0] = .5 - (.5 * weight)
+    else:
+        # Draw
+        pos_score[0] = .5
+
+    # Black's approximate score
+    pos_score[1] = 1 - pos_score[0]
+
+    return pos_score
 
 
 def parse_board(board):
@@ -106,17 +137,22 @@ def parse_board(board):
     return piece_positions
 
 
-def parse_pgn(filename, limit=100, save_to_file=False):
+def parse_pgn(filename, limit=1000):
+    """
+    Parse .pgn file
+    :param filename:
+    :param limit:
+    :return:
+    """
     with open(filename, 'r') as pgn:
 
         # Dataset is built by appending to lists b/c it is faster than appending to np.ndarrays
         positions = []
-        results = []
+        scores = []
         moves = []
 
         loop_count = 0
         while loop_count < limit:
-            print(loop_count)
             loop_count += 1
 
             # Parse .pgn file to Game object
@@ -145,39 +181,69 @@ def parse_pgn(filename, limit=100, save_to_file=False):
 
                 # Build dataset
                 positions.append(piece_positions)
-                results.append(result)
+
+                # Approximate current position's score
+                scores.append(approx_pos_score(result, move_idx, move_count))
+
                 moves.append(moves_left)
 
-    # Convert extracted data
+    # Convert extracted data into ndarray
     positions = np.array(positions)
     print(positions.shape)
-    results = np.array(results)
-    print(results.shape)
+    scores = np.array(scores)
+    print(scores.shape)
     moves = np.array(moves).astype(np.uint8)
     print(moves.shape)
 
-    X_pos_train, X_pos_test, y_res_train, y_res_test = train_test_split(positions, results, test_size=0.1,
+    assert 0 <= scores.min()
+    assert scores.max() <= 1
+
+    return positions, scores
+
+
+def load_data_from_pgn(filenames, save_to_file=False):
+    """
+    Loa
+    :param filenames:
+    :param save_to_file:
+    :return:
+    """
+    # Check if filenames is iterable
+    try:
+        iter(filenames)
+    except TypeError as te:
+        print(f'Argument filenames is not iterable')
+
+    # Datasets accumulator
+    X_position = np.empty((0, 8, 8, 12))
+    y_score = np.empty((0, 2))
+
+    for filename in filenames:
+        # Parse .pgn file
+        positions, scores = parse_pgn(filename)
+
+        # Build dataset
+        X_position = np.append(X_position, positions, axis=0)
+        y_score = np.append(y_score, scores, axis=0)
+
+    X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.1,
                                                                         random_state=42)
 
     print(X_pos_train.shape)
     print(X_pos_test.shape)
-    print(y_res_train.shape)
-    print(y_res_test.shape)
+    print(y_scr_train.shape)
+    print(y_scr_test.shape)
 
-    if save_to_file:
-        print("Saving inputs and targets to file...")
-        with open("input.npy", 'wb') as input_file:
-            np.save(input_file, np.stack(positions, axis=0))
-        with open("target.npy", "wb") as target_file:
-            np.save(target_file, np.stack(results, axis=0))
-        with open("moves_left.npy", "wb") as moves_left_file:
-            np.save(moves_left_file, np.stack(moves, axis=0))
+    # if save_to_file:
+    #     print("Saving inputs and targets to file...")
+    #     with open("X_positions.npy", 'wb') as input_file:
+    #         np.save(input_file, np.stack(positions, axis=0))
+    #     with open("y_scores.npy", "wb") as target_file:
+    #         np.save(target_file, np.stack(results, axis=0))
+    #     with open("moves_left.npy", "wb") as moves_left_file:
+    #         np.save(moves_left_file, np.stack(moves, axis=0))
 
-    return X_pos_train, X_pos_test, y_res_train, y_res_test
-
-
-def load_data_from_pgn(filename):
-    pass
+    return (X_pos_train, X_pos_test), (y_scr_train, y_scr_test)
 
 
 def load_data_from_npy():
@@ -210,5 +276,16 @@ def file_test():
     # print(inputs[0, :, :, 0])
 
 
+def load_all_pgn():
+    from os import listdir
+    from os.path import isfile, join
+
+    path = '../data/pgn/'
+
+    filenames = [path + f for f in listdir(path) if isfile(join(path, f))]
+
+    return load_data_from_pgn(filenames)
+
+
 if __name__ == '__main__':
-    X_train, X_test, y_train, y_test = parse_pgn('../data/ficsgamesdb_202101_standard2000_nomovetimes_197232.pgn')
+    (X_pos_train, X_pos_test), (y_scr_train, y_scr_test) = load_all_pgn()
