@@ -23,7 +23,9 @@ def train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test):
 
     test_loss, test_acc = model.evaluate(X_pos_test, y_scr_test, verbose=2)
 
-    print(test_acc)
+    print(f'Test accuracy {test_acc}')
+
+    return model
 
 
 if __name__ == '__main__':
@@ -34,6 +36,7 @@ if __name__ == '__main__':
     X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.01,
                                                                         random_state=42)
 
+    print('Train and test set shapes')
     print(X_pos_train.shape)
     print(X_pos_test.shape)
     print(y_scr_train.shape)
@@ -43,4 +46,6 @@ if __name__ == '__main__':
 
     model = create_model()
 
-    train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test)
+    model = train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test)
+
+    model.save('../model_trained')

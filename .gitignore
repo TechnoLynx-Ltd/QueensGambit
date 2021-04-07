@@ -8,6 +8,8 @@ __pycache__/
 
 .idea/
 
+model_trained/
+
 Chess/data
 
 Chess/ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn

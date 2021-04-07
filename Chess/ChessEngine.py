@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 
 
 class GameState:
@@ -13,8 +14,10 @@ class GameState:
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
-
         ]
+
+        self.position_dict = {'wP': 0, 'wR': 1, 'wN': 2, 'wB': 3, 'wQ': 4, 'wK': 5,
+                              'bP': 6, 'bR': 7, 'bN': 8, 'bB': 9, 'bQ': 10, 'bK': 11}
 
         self.white_to_move = True
         self.move_log = []
@@ -36,6 +39,26 @@ class GameState:
             'Q': self.get_queen_moves,
             'K': self.get_king_moves
         }
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return str(self.board)
+
+    def get_position(self):
+        """
+        Parse self.board into ndarray of size (8, 8, 12)
+        :return position: np.ndarray
+        """
+        position = np.zeros((8, 8, 12), dtype=np.int8)
+
+        for i, line in enumerate(self.board):
+            for j, pos in enumerate(line):
+                if pos != "--":
+                    position[i, j, self.position_dict[pos]] = 1
+
+        return position
 
     def update_castle_rights(self, move):
         if self.white_to_move:
@@ -219,11 +242,10 @@ class GameState:
 
         return moves
 
-    """
-    All moves without considering checks
-    """
-
     def get_all_possible_moves(self):
+        """
+        Get all moves without considering checks
+        """
         moves = []
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):

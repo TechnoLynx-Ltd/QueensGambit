@@ -40,6 +40,13 @@ def find_greedy_move(gs, valid_moves):
     return best_move
 
 
+def find_minmax_best_move(gs, valid_moves):
+    global next_move
+    next_move = None
+    find_minmax_move(gs, valid_moves, DEPTH, gs.white_to_move, -CHECKMATE, CHECKMATE)
+    return next_move
+
+
 def find_minmax_move(gs, valid_moves, depth, white_to_move, alpha, beta):
     global next_move
     if depth == 0:
@@ -79,10 +86,43 @@ def find_minmax_move(gs, valid_moves, depth, white_to_move, alpha, beta):
         return min_score
 
 
-def find_minmax_best_move(gs, valid_moves):
-    global next_move
-    next_move = None
-    find_minmax_move(gs, valid_moves, DEPTH, gs.white_to_move, -CHECKMATE, CHECKMATE)
+def find_model_best_move(game_state, valid_moves, model):
+    if game_state.white_to_move:  # White moves
+
+        max_score = 0
+        for move in valid_moves:
+
+            # Make a valid move
+            game_state.make_move(move)
+
+            # Model predicts score of current position
+            score = model.predict(game_state.get_position())[0]
+
+            if score > max_score:
+                max_score = score
+                next_move = move
+
+            # Restore game_state into original position
+            game_state.undo_move()
+
+    else:  # Black moves
+
+        max_score = 0
+        for move in valid_moves:
+
+            # Make a valid move
+            game_state.make_move(move)
+
+            # Model predicts score of current position
+            score = model.predict(game_state.get_position())[1]
+
+            if score > max_score:
+                max_score = score
+                next_move = move
+
+            # Restore game_state into original position
+            game_state.undo_move()
+
     return next_move
 
 
