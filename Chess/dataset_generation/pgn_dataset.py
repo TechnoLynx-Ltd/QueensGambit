@@ -2,7 +2,6 @@ import chess.pgn
 import h5py
 import math
 import numpy as np
-from sklearn.model_selection import train_test_split
 
 all_ending_reasons = {'White forfeits on time',
                       'White forfeits by disconnection',
@@ -154,7 +153,7 @@ def parse_pgn(filename, debug=False):
         if debug:
             limit = 10
         else:
-            limit = 10000
+            limit = 1000
 
         loop_count = 0
 
@@ -241,44 +240,14 @@ def load_data_from_pgn(filenames, save_to_file=False, debug=False):
 
     if save_to_file:
         print("Saving dataset to file")
-        with open("X_positions.npy", 'wb') as X_pos_file:
+        with open("../data/npy/X_positions.npy", 'wb') as X_pos_file:
             np.save(X_pos_file, X_position)
-        with open("y_scores.npy", "wb") as y_scr_file:
+        with open("../data/npy/y_scores.npy", "wb") as y_scr_file:
             np.save(y_scr_file, y_score)
-        with open("y_moves.npy", "wb") as y_res_file:
+        with open("../data/npy/y_moves.npy", "wb") as y_res_file:
             np.save(y_res_file, y_moves)
 
     return X_position, y_score, y_moves
-
-
-def load_data_from_npy():
-    inputs = np.load("input.npy")
-    results = np.load("target.npy")
-    moves = np.load("moves_left.npy")
-    return inputs, results, moves
-
-
-def file_test():
-
-    inputs = np.load("input.npy")
-    results = np.load("target.npy")
-    moves = np.load("moves_left.npy")
-    print(len(inputs))
-    print(len(results))
-    print(len(moves))
-    print(inputs[0][:, :, 0])
-    print(moves[0])
-    inputs = np.stack(inputs, axis=0)
-    results = np.stack(results, axis=0)
-    moves = np.stack(moves, axis=0)
-    print(inputs.shape)
-    print(inputs[0, :, :, 0])
-
-    print(results.shape)
-    # print(inputs[0, :, :, 0])
-
-    print(moves.shape)
-    # print(inputs[0, :, :, 0])
 
 
 if __name__ == '__main__':
@@ -289,20 +258,9 @@ if __name__ == '__main__':
 
     filenames = [path + f for f in listdir(path) if isfile(join(path, f))]
 
-    load_data_from_pgn(filenames, save_to_file=True, debug=False)
+    load_data_from_pgn(filenames, save_to_file=True, debug=True)
 
-
-
-
-
-    # (X_pos_train, X_pos_test), (y_scr_train, y_scr_test) = load_all_pgn()
-    #
-    # X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.1,
-    #                                                                     random_state=42)
-    #
-    # print(X_pos_train.shape)
-    # print(X_pos_test.shape)
-    # print(y_scr_train.shape)
-    # print(y_scr_test.shape)
-    #
-    # (X_pos_train, X_pos_test), (y_scr_train, y_scr_test)
+    print('Open and check .npy files')
+    print(np.load("../data/npy/X_positions.npy").shape)
+    print(np.load("../data/npy/y_moves.npy").shape)
+    print(np.load("../data/npy/y_scores.npy").shape)

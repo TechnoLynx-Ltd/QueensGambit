@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.model_selection import train_test_split
 
-from Chess.dataset_generation.pgn_dataset import load_all_pgn
 from Chess.model.model import create_model
 
 
 def train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test):
-
     history = model.fit(x=X_pos_train,
                         y=y_scr_train,
                         batch_size=128,
@@ -27,7 +27,19 @@ def train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test):
 
 
 if __name__ == '__main__':
-    (X_pos_train, X_pos_test), (y_scr_train, y_scr_test) = load_all_pgn()
+    X_position = np.load("../data/npy/X_positions_337640.npy")
+    y_move = np.load("../data/npy/y_moves_337640.npy")
+    y_score = np.load("../data/npy/y_scores_337640.npy")
+
+    X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.01,
+                                                                        random_state=42)
+
+    print(X_pos_train.shape)
+    print(X_pos_test.shape)
+    print(y_scr_train.shape)
+    print(y_scr_test.shape)
+
+    (X_pos_train, X_pos_test), (y_scr_train, y_scr_test)
 
     model = create_model()
 
