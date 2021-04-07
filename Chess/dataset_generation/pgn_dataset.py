@@ -86,7 +86,7 @@ def approx_pos_score(result, move_idx, move_count):
     :param result:
     :param move_idx:
     :param move_count:
-    :return: : np.ndarry
+    :return: pos_score: np.ndarry -
     """
     assert result in ['1-0', '0-1', '1/2-1/2']
     assert move_idx <= move_count
@@ -137,7 +137,7 @@ def parse_board(board):
     return piece_positions
 
 
-def parse_pgn(filename, limit=1000):
+def parse_pgn(filename, debug=False):
     """
     Parse .pgn file
     :param filename:
@@ -151,7 +151,13 @@ def parse_pgn(filename, limit=1000):
         scores = []
         moves = []
 
+        if debug:
+            limit = 10
+        else:
+            limit = 10000
+
         loop_count = 0
+
         while loop_count < limit:
             loop_count += 1
 
@@ -177,36 +183,41 @@ def parse_pgn(filename, limit=1000):
                 board.push(move)
                 piece_positions = parse_board(board)
 
+                # Calculate no. moves left
                 moves_left = move_count - (move_idx + 1)
 
-                # Build dataset
+                # Save positions
                 positions.append(piece_positions)
 
-                # Approximate current position's score
+                # Approximate and save current position's score
                 scores.append(approx_pos_score(result, move_idx, move_count))
 
+                # Save no. moves left until end of game
                 moves.append(moves_left)
 
     # Convert extracted data into ndarray
     positions = np.array(positions)
-    print(positions.shape)
     scores = np.array(scores)
-    print(scores.shape)
     moves = np.array(moves).astype(np.uint8)
-    print(moves.shape)
 
     assert 0 <= scores.min()
     assert scores.max() <= 1
 
-    return positions, scores
+    # Info
+    print(f'File {filename} parsed')
+    print(f'Positions: {positions.shape}')
+    print(f'Scores: {scores.shape}')
+    print(f'Moves: {moves.shape}')
+
+    return positions, scores, moves
 
 
-def load_data_from_pgn(filenames, save_to_file=False):
+def load_data_from_pgn(filenames, save_to_file=False, debug=False):
     """
-    Loa
-    :param filenames:
-    :param save_to_file:
-    :return:
+    Load data from list of .pgn files and builds dataset
+    :param filenames: list
+    :param save_to_file: boolean
+    :return: tuple of ndarrays - dataset
     """
     # Check if filenames is iterable
     try:
@@ -217,33 +228,27 @@ def load_data_from_pgn(filenames, save_to_file=False):
     # Datasets accumulator
     X_position = np.empty((0, 8, 8, 12))
     y_score = np.empty((0, 2))
+    y_moves = np.empty((0,))
 
     for filename in filenames:
         # Parse .pgn file
-        positions, scores = parse_pgn(filename)
+        positions, scores, moves = parse_pgn(filename, debug)
 
         # Build dataset
         X_position = np.append(X_position, positions, axis=0)
         y_score = np.append(y_score, scores, axis=0)
+        y_moves = np.append(y_moves, moves, axis=0)
 
-    X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.1,
-                                                                        random_state=42)
+    if save_to_file:
+        print("Saving dataset to file")
+        with open("X_positions.npy", 'wb') as X_pos_file:
+            np.save(X_pos_file, X_position)
+        with open("y_scores.npy", "wb") as y_scr_file:
+            np.save(y_scr_file, y_score)
+        with open("y_moves.npy", "wb") as y_res_file:
+            np.save(y_res_file, y_moves)
 
-    print(X_pos_train.shape)
-    print(X_pos_test.shape)
-    print(y_scr_train.shape)
-    print(y_scr_test.shape)
-
-    # if save_to_file:
-    #     print("Saving inputs and targets to file...")
-    #     with open("X_positions.npy", 'wb') as input_file:
-    #         np.save(input_file, np.stack(positions, axis=0))
-    #     with open("y_scores.npy", "wb") as target_file:
-    #         np.save(target_file, np.stack(results, axis=0))
-    #     with open("moves_left.npy", "wb") as moves_left_file:
-    #         np.save(moves_left_file, np.stack(moves, axis=0))
-
-    return (X_pos_train, X_pos_test), (y_scr_train, y_scr_test)
+    return X_position, y_score, y_moves
 
 
 def load_data_from_npy():
@@ -254,7 +259,7 @@ def load_data_from_npy():
 
 
 def file_test():
-    # inputs, results, moves = self.parse_pgn("ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn")
+
     inputs = np.load("input.npy")
     results = np.load("target.npy")
     moves = np.load("moves_left.npy")
@@ -276,7 +281,7 @@ def file_test():
     # print(inputs[0, :, :, 0])
 
 
-def load_all_pgn():
+if __name__ == '__main__':
     from os import listdir
     from os.path import isfile, join
 
@@ -284,8 +289,20 @@ def load_all_pgn():
 
     filenames = [path + f for f in listdir(path) if isfile(join(path, f))]
 
-    return load_data_from_pgn(filenames)
+    load_data_from_pgn(filenames, save_to_file=True, debug=False)
 
 
-if __name__ == '__main__':
-    (X_pos_train, X_pos_test), (y_scr_train, y_scr_test) = load_all_pgn()
+
+
+
+    # (X_pos_train, X_pos_test), (y_scr_train, y_scr_test) = load_all_pgn()
+    #
+    # X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.1,
+    #                                                                     random_state=42)
+    #
+    # print(X_pos_train.shape)
+    # print(X_pos_test.shape)
+    # print(y_scr_train.shape)
+    # print(y_scr_test.shape)
+    #
+    # (X_pos_train, X_pos_test), (y_scr_train, y_scr_test)
