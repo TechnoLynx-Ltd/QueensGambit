@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 piece_weights = {
     '-': 0,
@@ -95,8 +96,16 @@ def find_model_best_move(game_state, valid_moves, model):
             # Make a valid move
             game_state.make_move(move)
 
-            # Model predicts score of current position
-            score = model.predict(game_state.get_position())[0]
+            # Expand current position to 4D b/c model input requirement
+            pos = game_state.get_position()
+            pos = pos[np.newaxis, :, :, :]
+
+            # Model predicts score (shape:(1,2)) of current position
+            score = model.predict(pos)
+            assert score[0, 0] + score[0, 1] >= 0.99
+
+            # Get only White score
+            score = score[0, 0]
 
             if score > max_score:
                 max_score = score
@@ -113,8 +122,16 @@ def find_model_best_move(game_state, valid_moves, model):
             # Make a valid move
             game_state.make_move(move)
 
-            # Model predicts score of current position
-            score = model.predict(game_state.get_position())[1]
+            # Expand current position to 4D b/c model input requirement
+            pos = game_state.get_position()
+            pos = pos[np.newaxis, :, :, :]
+
+            # Model predicts score (shape:(1,2)) of current position
+            score = model.predict(pos)
+            assert score[0, 0] + score[0, 1] >= 0.99
+
+            # Get only Black score
+            score = score[0, 1]
 
             if score > max_score:
                 max_score = score

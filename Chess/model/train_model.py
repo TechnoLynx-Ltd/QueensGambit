@@ -9,7 +9,7 @@ def train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test):
     history = model.fit(x=X_pos_train,
                         y=y_scr_train,
                         batch_size=128,
-                        epochs=10,
+                        epochs=1,
                         validation_data=(X_pos_test, y_scr_test),
                         shuffle=True)
 
@@ -29,9 +29,9 @@ def train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test):
 
 
 if __name__ == '__main__':
-    X_position = np.load("../data/npy/X_positions_337640.npy")
-    y_move = np.load("../data/npy/y_moves_337640.npy")
-    y_score = np.load("../data/npy/y_scores_337640.npy")
+    X_position = np.load("../data/npy/X_positions_337640.npy").astype(np.int8)
+    y_move = np.load("../data/npy/y_moves_337640.npy").astype(np.int8)
+    y_score = np.load("../data/npy/y_scores_337640.npy").astype(np.int8)
 
     X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.01,
                                                                         random_state=42)
@@ -48,4 +48,4 @@ if __name__ == '__main__':
 
     model = train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test)
 
-    model.save('../model_trained')
+    # model.save('../model_trained_2')

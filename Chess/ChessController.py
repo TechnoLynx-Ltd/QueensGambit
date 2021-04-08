@@ -1,8 +1,10 @@
 """
-Class to control the chess engine by handling user input.
+Module to control the chess engine by handling user input.
 """
 import pygame as p
 import os
+from tensorflow import keras
+
 from Chess import ChessEngine
 import ChessAI
 
@@ -48,6 +50,9 @@ def main():
     white_ai = True
     black_ai = False
 
+    # Load trained model
+    model = keras.models.load_model('model_trained')
+
     while running:
         human_turn = (gs.white_to_move and not white_ai) or (not gs.white_to_move and not black_ai)
         for e in p.event.get():
@@ -60,7 +65,8 @@ def main():
                                                                                 valid_moves, gs, made_move)
 
                 elif not game_over and not human_turn:
-                    chosen_move = ChessAI.find_minmax_best_move(gs, valid_moves)
+                    # chosen_move = ChessAI.find_minmax_best_move(gs, valid_moves)
+                    chosen_move = ChessAI.find_model_best_move(gs, valid_moves, model)
                     gs.make_move(chosen_move)
                     made_move = True
 
