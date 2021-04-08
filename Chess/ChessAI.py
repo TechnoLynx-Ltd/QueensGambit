@@ -88,62 +88,49 @@ def find_minmax_move(gs, valid_moves, depth, white_to_move, alpha, beta):
 
 
 def find_model_best_move(game_state, valid_moves, model):
-    if game_state.white_to_move:  # White moves
+    """
+    Predict the score of all valid moves with a trained model and return the move with the highest score
+    :param game_state: GameState
+    :param valid_moves: list of Move
+    :param model: keras.model
+    :return: Move
+    """
+    max_score = 0
+    for move in valid_moves:
 
-        max_score = 0
-        for move in valid_moves:
+        # Make a valid move
+        game_state.make_move(move)
 
-            # Make a valid move
-            game_state.make_move(move)
+        # Expand current position to 4D b/c model input requirement
+        pos = game_state.get_position()
+        pos = pos[np.newaxis, :, :, :]
 
-            # Expand current position to 4D b/c model input requirement
-            pos = game_state.get_position()
-            pos = pos[np.newaxis, :, :, :]
+        # Model predicts score (shape:(1,2)) of current position
+        score = model.predict(pos)
+        assert score[0, 0] + score[0, 1] >= 0.99
 
-            # Model predicts score (shape:(1,2)) of current position
-            score = model.predict(pos)
-            assert score[0, 0] + score[0, 1] >= 0.99
-
-            # Get only White score
+        if game_state.white_to_move:  # White moves
+            # White score
             score = score[0, 0]
-
-            if score > max_score:
-                max_score = score
-                next_move = move
-
-            # Restore game_state into original position
-            game_state.undo_move()
-
-    else:  # Black moves
-
-        max_score = 0
-        for move in valid_moves:
-
-            # Make a valid move
-            game_state.make_move(move)
-
-            # Expand current position to 4D b/c model input requirement
-            pos = game_state.get_position()
-            pos = pos[np.newaxis, :, :, :]
-
-            # Model predicts score (shape:(1,2)) of current position
-            score = model.predict(pos)
-            assert score[0, 0] + score[0, 1] >= 0.99
-
-            # Get only Black score
+        else:  # Black moves
+            # Black score
             score = score[0, 1]
 
-            if score > max_score:
-                max_score = score
-                next_move = move
+        if score > max_score:
+            max_score = score
+            next_move = move
 
-            # Restore game_state into original position
-            game_state.undo_move()
+        # Restore game_state into original position
+        game_state.undo_move()
 
     return next_move
 
 
 def score_material(board):
+    """
+    Positive score -> white
+    Negative score -> black
+    """
     score = 0
     for row in board:
         for square in row:
@@ -155,13 +142,11 @@ def score_material(board):
     return score
 
 
-"""
-Positive score -> white
-Negative score -> black
-"""
-
-
 def score_board(gs):
+    """
+    Positive score -> white
+    Negative score -> black
+    """
     if gs.checkmate:
         if gs.white_to_move:
             return -CHECKMATE
