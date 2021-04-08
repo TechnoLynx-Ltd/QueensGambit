@@ -2,18 +2,12 @@ venv/
 
 __pycache__/
 
-.pyc
-
-*.npy
-
 .idea/
 
-model_trained/
+data/
 
-Chess/data
+model/
 
-Chess/ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn
+*.pyc
 
-Chess/100.pgn
-
-Chess/*.npy
+*.npy

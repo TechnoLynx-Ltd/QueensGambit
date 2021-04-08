@@ -1,3 +1,7 @@
+"""
+Module of AI invoking methods
+"""
+
 import random
 import numpy as np
 

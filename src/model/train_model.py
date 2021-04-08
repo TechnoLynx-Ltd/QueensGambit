@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from Chess.model.model import create_model
+from src.model.model import create_model
 
 
 def train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test):
@@ -29,9 +29,9 @@ def train(model, X_pos_train, X_pos_test, y_scr_train, y_scr_test):
 
 
 if __name__ == '__main__':
-    X_position = np.load("../data/npy/X_positions_337640.npy").astype(np.int8)
-    y_move = np.load("../data/npy/y_moves_337640.npy").astype(np.int8)
-    y_score = np.load("../data/npy/y_scores_337640.npy").astype(np.int8)
+    X_position = np.load("../../data/npy/X_positions_337640.npy").astype(np.int8)
+    y_move = np.load("../../data/npy/y_moves_337640.npy").astype(np.int8)
+    y_score = np.load("../../data/npy/y_scores_337640.npy").astype(np.int8)
 
     X_pos_train, X_pos_test, y_scr_train, y_scr_test = train_test_split(X_position, y_score, test_size=0.01,
                                                                         random_state=42)
