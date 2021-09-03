@@ -1,5 +1,4 @@
 import copy
-import numpy as np
 
 
 class GameState:
@@ -51,14 +50,12 @@ class GameState:
         Parse self.board into ndarray of size (8, 8, 12)
         :return position: np.ndarray
         """
-        position = np.zeros((8, 8, 12), dtype=np.int8)
-
+        nested_list_position = [[[0 for k in range(12)] for j in range(8)] for i in range(8)]  # numpy alternative
         for i, line in enumerate(self.board):
             for j, pos in enumerate(line):
                 if pos != "--":
-                    position[i, j, self.position_dict[pos]] = 1
-
-        return position
+                    nested_list_position[i][j][self.position_dict[pos]] = 1
+        return nested_list_position
 
     def update_castle_rights(self, move):
         if self.white_to_move:

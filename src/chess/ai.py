@@ -3,7 +3,6 @@ Module of AI invoking methods
 """
 
 import random
-import numpy as np
 
 piece_weights = {
     '-': 0,
@@ -106,11 +105,12 @@ def find_model_best_move(game_state, valid_moves, model):
         game_state.make_move(move)
 
         # Expand current position to 4D b/c model input requirement
-        pos = game_state.get_position()
-        pos = pos[np.newaxis, :, :, :]
+        nested_list_pos = game_state.get_position()
+        nested_list_pos = [[[[nested_list_pos[i][j][k] for k in range(12)] for j in range(8)] for i in range(8)]
+                           for n in range(1)]  # numpy alternative
 
         # Model predicts score (shape:(1,2)) of current position
-        score = model.predict(pos)
+        score = model.predict(nested_list_pos)
         assert score[0, 0] + score[0, 1] >= 0.99
 
         if game_state.white_to_move:  # White moves

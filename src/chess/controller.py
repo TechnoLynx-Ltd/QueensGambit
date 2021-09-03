@@ -54,7 +54,7 @@ def main():
     black_ai = False
 
     # Load trained model
-    model = keras.models.load_model('../../model')
+    model = keras.models.load_model('../model')
 
     while running:
         human_turn = (gs.white_to_move and not white_ai) or (not gs.white_to_move and not black_ai)

@@ -11,3 +11,5 @@ model/
 *.pyc
 
 *.npy
+
+*.pb

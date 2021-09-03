@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
     filenames = [path + f for f in listdir(path) if isfile(join(path, f))]
 
-    load_data_from_pgn(filenames, save_to_file=True, debug=True)
+    load_data_from_pgn(filenames, save_to_file=True, debug=False)
 
     print('Open and check .npy files')
     print(np.load("../../data/npy/X_positions.npy").shape)
