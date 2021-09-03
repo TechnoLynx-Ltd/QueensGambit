@@ -1,0 +1,234 @@
+<html>
+
+<script src="engine.js"></script>
+
+<script type="text/javascript">
+
+var canvas, context;
+var square_width, square_height;
+var selected_square = null;
+var player_clicks = [];
+var white_ai = false;
+var black_ai = true;
+var valid_moves = [];
+var dimension = 8;
+var game_state = engine.game_state;
+
+function draw_board()
+{
+    var square_colors = ["LightGray", "DarkGray"];
+
+    context.globalAlpha = 1;
+
+    for (r = 0; r < dimension; ++r)
+    {
+        for (c = 0; c < dimension; ++c)
+        {
+            context.fillStyle = square_colors[(r + c) % 2];
+            context.fillRect(
+                c * square_width,
+                r * square_height,
+                square_width,
+                square_height);
+        }
+    }
+}
+
+function draw_pieces()
+{
+    context.globalAlpha = 1;
+
+    for (r = 0; r < dimension; ++r)
+    {
+        for (c = 0; c < dimension; ++c)
+        {
+            var piece = game_state.board[r][c];
+            var piece_image = document.getElementById(piece);
+
+            if (piece != "--")
+            {
+                context.drawImage(
+                    piece_image, c * square_width, r * square_height);
+            }
+        }
+    }
+}
+
+function highlight_square()
+{
+    if (selected_square)
+    {
+        var row = selected_square[0];
+        var column = selected_square[1];
+        var current_letter = (game_state.white_to_move ? "w" : "b");
+
+        if (game_state.board[row][column][0] == current_letter)
+        {
+            context.globalAlpha = 0.5;
+            context.fillStyle = "Green";
+            context.fillRect(
+                column * square_width,
+                row * square_height,
+                square_width,
+                square_height);
+            context.fillStyle = "Blue";
+
+            for (const move of valid_moves)
+            {
+                if (move[0] == row && move.start_col == column)
+                {
+                    context.fillRect(
+                        move[2] * square_width,
+                        move[3] * square_height,
+                        square_width,
+                        square_height);
+                }
+            }
+        }
+    }
+}
+
+function draw_game_state()
+{
+    draw_board();
+    draw_pieces();
+    highlight_square();
+}
+
+function init()
+{
+    canvas = document.getElementById("canvas");
+    context = canvas.getContext("2d");
+    square_width = canvas.width / 8;
+    square_height = canvas.height / 8;
+    canvas.addEventListener("click", click);
+    draw_board();
+    draw_pieces();
+}
+
+function equals(array1, array2)
+{
+    if (array1 == null && array2 == null)
+    {
+        return true;
+    }
+
+    if (array1 == null || array2 == null)
+    {
+        return false;
+    }
+
+    if (array1.length != array2.length)
+    {
+        return false;
+    }
+
+    for (var i = 0; i < array1.length; ++i)
+    {
+        if (array1[i] != array2[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function click(event)
+{
+    var is_human_turn =
+        (game_state.white_to_move && !white_ai) ||
+        (!game_state.white_to_move && !black_ai);
+    var coordinate_x = event.clientX - canvas.offsetLeft;
+    var coordinate_y = event.clientY - canvas.offsetTop;
+    var square_x = Math.floor(coordinate_x / square_width);
+    var square_y = Math.floor(coordinate_y / square_height);
+    var clicked_square = [square_y, square_x];
+
+    if (!is_human_turn)
+    {
+        play_ai_turn();
+    }
+    else
+    {
+        if (equals(selected_square, clicked_square))
+        {
+            selected_square = null;
+            player_clicks = [];
+        }
+        else
+        {
+            selected_square = clicked_square;
+            player_clicks.push(clicked_square);
+            highlight_square();
+        }
+
+        if (player_clicks.length == 2)
+        {
+            var is_move_valid = false;
+
+            //move = engine.move(player_clicks[0], player_clicks[1], game_state.board);
+
+            for (valid_move of valid_moves)
+            {
+                if (equals(move, valid_move))
+                {
+                    //game_state.make_move(valid_move);
+                    is_move_valid = true;
+                    selected_square = null;
+                    player_clicks = [];
+                }
+            }
+
+            if (!is_move_valid)
+            {
+                player_clicks = [selected_square];
+            }
+            else
+            {
+                //valid_moves = game_state.get_valid_moves();
+            }
+        }
+    }
+
+    draw_game_state();
+}
+
+</script>
+
+<body onload="init()">
+
+<canvas width="512" height="512" id="canvas"></canvas>
+<script type="text/javascript">
+
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext("2d");
+
+width = canvas.width;
+height = canvas.height;
+context.fillStyle = "#FF0000";
+context.fillRect(0, 0, width, height);
+
+</script>
+
+<div>
+<button id="undo">Undo</button>
+<button id="reset">Reset</button>
+</div>
+
+<img id="bB" width="64" height="64" src="../images/bB.png" style="display: none;">
+<img id="bK" width="64" height="64" src="../images/bK.png" style="display: none;">
+<img id="bN" width="64" height="64" src="../images/bN.png" style="display: none;">
+<img id="bR" width="64" height="64" src="../images/bR.png" style="display: none;">
+<img id="bQ" width="64" height="64" src="../images/bQ.png" style="display: none;">
+<img id="bP" width="64" height="64" src="../images/bP.png" style="display: none;">
+<img id="wB" width="64" height="64" src="../images/wB.png" style="display: none;">
+<img id="wK" width="64" height="64" src="../images/wK.png" style="display: none;">
+<img id="wN" width="64" height="64" src="../images/wN.png" style="display: none;">
+<img id="wR" width="64" height="64" src="../images/wR.png" style="display: none;">
+<img id="wQ" width="64" height="64" src="../images/wQ.png" style="display: none;">
+<img id="wP" width="64" height="64" src="../images/wP.png" style="display: none;">
+
+
+</body>
+</html>
