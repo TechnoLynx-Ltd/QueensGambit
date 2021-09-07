@@ -4,19 +4,21 @@
 
 <script type="text/javascript">
 
-var canvas, context;
-var square_width, square_height;
-var selected_square = null;
-var player_clicks = [];
-var white_ai = false;
-var black_ai = true;
-var valid_moves = [];
-var dimension = 8;
-var game_state = engine.game_state;
+let canvas, context;
+let square_width, square_height;
+let selected_square = null;
+let player_clicks = [];
+let white_ai = false;
+let black_ai = false;
+let valid_moves = [];
+let dimension = 8;
+let game_state = new Game_state();
+let game_over = false;
+let made_move = false;
 
 function draw_board()
 {
-    var square_colors = ["LightGray", "DarkGray"];
+    let square_colors = ["LightGray", "DarkGray"];
 
     context.globalAlpha = 1;
 
@@ -42,8 +44,8 @@ function draw_pieces()
     {
         for (c = 0; c < dimension; ++c)
         {
-            var piece = game_state.board[r][c];
-            var piece_image = document.getElementById(piece);
+            let piece = game_state.board[r][c];
+            let piece_image = document.getElementById(piece);
 
             if (piece != "--")
             {
@@ -56,34 +58,38 @@ function draw_pieces()
 
 function highlight_square()
 {
-    if (selected_square)
+    if (!selected_square)
     {
-        var row = selected_square[0];
-        var column = selected_square[1];
-        var current_letter = (game_state.white_to_move ? "w" : "b");
+        return;
+    }
 
-        if (game_state.board[row][column][0] == current_letter)
+    let row = selected_square[0];
+    let column = selected_square[1];
+    let current_letter = (game_state.white_to_move ? "w" : "b");
+
+    if (game_state.board[row][column][0] != current_letter)
+    {
+        return;
+    }
+
+    context.globalAlpha = 0.5;
+    context.fillStyle = "Green";
+    context.fillRect(
+        column * square_width,
+        row * square_height,
+        square_width,
+        square_height);
+    context.fillStyle = "Blue";
+
+    for (const move of valid_moves)
+    {
+        if (move.start[0] == row && move.start[1] == column)
         {
-            context.globalAlpha = 0.5;
-            context.fillStyle = "Green";
             context.fillRect(
-                column * square_width,
-                row * square_height,
+                move.end[1] * square_width,
+                move.end[0] * square_height,
                 square_width,
                 square_height);
-            context.fillStyle = "Blue";
-
-            for (const move of valid_moves)
-            {
-                if (move[0] == row && move.start_col == column)
-                {
-                    context.fillRect(
-                        move[2] * square_width,
-                        move[3] * square_height,
-                        square_width,
-                        square_height);
-                }
-            }
         }
     }
 }
@@ -95,6 +101,28 @@ function draw_game_state()
     highlight_square();
 }
 
+function is_ai_turn()
+{
+    let result = game_state.white_to_move && white_ai;
+
+    result = result || (!game_state.white_to_move && black_ai);
+    result = result && !game_over;
+
+    return result;
+}
+
+function play_ai_turns()
+{
+    while (is_ai_turn())
+    {
+        // TODO: decide which move to make
+        game_state.make_move(valid_moves[0]);
+        made_move = true;
+
+        refresh_state();
+    }
+}
+
 function init()
 {
     canvas = document.getElementById("canvas");
@@ -104,94 +132,120 @@ function init()
     canvas.addEventListener("click", click);
     draw_board();
     draw_pieces();
+    valid_moves = game_state.get_valid_moves();
+    play_ai_turns();
 }
 
-function equals(array1, array2)
+function refresh_state()
 {
-    if (array1 == null && array2 == null)
+    if (made_move)
     {
-        return true;
+        valid_moves = game_state.get_valid_moves();
+        made_move = false;
     }
 
-    if (array1 == null || array2 == null)
-    {
-        return false;
-    }
+    draw_game_state();
 
-    if (array1.length != array2.length)
+    if (game_state.checkmate)
     {
-        return false;
-    }
+        game_over = true;
 
-    for (var i = 0; i < array1.length; ++i)
-    {
-        if (array1[i] != array2[i])
+        if (game_state.white_to_move)
         {
-            return false;
+            draw_text("Black wins by checkmate");
+        }
+        else
+        {
+            draw_text("White wins by checkmate");
         }
     }
 
-    return true;
+    if (game_state.stalemate)
+    {
+        game_over = true;
+        draw_text("Stalemate");
+    }
 }
 
 function click(event)
 {
-    var is_human_turn =
-        (game_state.white_to_move && !white_ai) ||
-        (!game_state.white_to_move && !black_ai);
-    var coordinate_x = event.clientX - canvas.offsetLeft;
-    var coordinate_y = event.clientY - canvas.offsetTop;
-    var square_x = Math.floor(coordinate_x / square_width);
-    var square_y = Math.floor(coordinate_y / square_height);
-    var clicked_square = [square_y, square_x];
-
-    if (!is_human_turn)
+    if (game_over)
     {
-        play_ai_turn();
+        return;
+    }
+
+    let coordinate_x = event.clientX - canvas.offsetLeft;
+    let coordinate_y = event.clientY - canvas.offsetTop;
+    let square_x = Math.floor(coordinate_x / square_width);
+    let square_y = Math.floor(coordinate_y / square_height);
+    let clicked_square = [square_y, square_x];
+
+    if (
+        Array.isArray(selected_square) &&
+        selected_square[0] == clicked_square[0] &&
+        selected_square[1] == clicked_square[1])
+    {
+        selected_square = null;
+        player_clicks = [];
     }
     else
     {
-        if (equals(selected_square, clicked_square))
+        selected_square = clicked_square;
+        player_clicks.push(clicked_square);
+        highlight_square();
+    }
+
+    if (player_clicks.length == 2)
+    {
+        move = new Move(player_clicks[0], player_clicks[1], game_state.board);
+
+        for (const valid_move of valid_moves)
         {
-            selected_square = null;
-            player_clicks = [];
+            if (move.equals(valid_move))
+            {
+                game_state.make_move(valid_move);
+                made_move = true;
+                selected_square = null;
+                player_clicks = [];
+            }
         }
-        else
+
+        if (!made_move)
         {
-            selected_square = clicked_square;
-            player_clicks.push(clicked_square);
-            highlight_square();
-        }
-
-        if (player_clicks.length == 2)
-        {
-            var is_move_valid = false;
-
-            //move = engine.move(player_clicks[0], player_clicks[1], game_state.board);
-
-            for (valid_move of valid_moves)
-            {
-                if (equals(move, valid_move))
-                {
-                    //game_state.make_move(valid_move);
-                    is_move_valid = true;
-                    selected_square = null;
-                    player_clicks = [];
-                }
-            }
-
-            if (!is_move_valid)
-            {
-                player_clicks = [selected_square];
-            }
-            else
-            {
-                //valid_moves = game_state.get_valid_moves();
-            }
+            player_clicks = [ selected_square ];
         }
     }
 
-    draw_game_state();
+    refresh_state();
+    play_ai_turns();
+}
+
+function undo_click()
+{
+    game_state.undo_move();
+    made_move = true;
+    game_over = false;
+
+    refresh_state();
+    play_ai_turns();
+}
+
+function reset_click()
+{
+    game_state = new Game_state();
+    valid_moves = game_state.get_valid_moves();
+    selected_square = null;
+    player_clicks = [];
+    made_move = false;
+    game_over = false;
+
+    refresh_state();
+    play_ai_turns();
+}
+
+function draw_text(text)
+{
+    document.getElementById("messages").innerHTML = text;
 }
 
 </script>
@@ -199,22 +253,13 @@ function click(event)
 <body onload="init()">
 
 <canvas width="512" height="512" id="canvas"></canvas>
-<script type="text/javascript">
-
-var canvas = document.getElementById('canvas');
-var context = canvas.getContext("2d");
-
-width = canvas.width;
-height = canvas.height;
-context.fillStyle = "#FF0000";
-context.fillRect(0, 0, width, height);
-
-</script>
 
 <div>
-<button id="undo">Undo</button>
-<button id="reset">Reset</button>
+    <button id="undo" onclick="undo_click()">Undo</button>
+    <button id="reset" onclick="reset_click()">Reset</button>
 </div>
+
+<div id="messages"></div>
 
 <img id="bB" width="64" height="64" src="../images/bB.png" style="display: none;">
 <img id="bK" width="64" height="64" src="../images/bK.png" style="display: none;">
