@@ -196,14 +196,9 @@ class Game_state
 
         if (move.promotion_move)
         {
-            if (this.white_to_move)
-            {
-                this.board[move.end[0]][move.end[1]] = "wQ";
-            }
-            else
-            {
-                this.board[move.end[0]][move.end[1]] = "bQ";
-            }
+            const color = this.white_to_move ? "w" : "b";
+
+            this.board[move.end[0]][move.end[1]] = color + "Q";
         }
         else
         {
@@ -212,30 +207,19 @@ class Game_state
 
         if (move.en_passant_move)
         {
-            if (this.white_to_move)
-            {
-                this.board[move.end[0] + 1][move.end[1]] = "--";
-            }
-            else
-            {
-                this.board[move.end[0] - 1][move.end[1]] = "--";
-            }
+            const direction = this.white_to_move ? 1 : -1;
+
+            this.board[move.end[0] + direction][move.end[1]] = "--";
         }
 
         if (move.castle_move)
         {
-            if (move.end_column == 2)
-            {
-                this.board[move.end[0]][move.end[1] + 1] =
-                    this.board[move.end[0]][move.end[1] - 2];
-                this.board[move.end[0]][move.end[1] - 2] = "--";
-            }
-            else
-            {
-                this.board[move.end[0]][move.end[1] - 1] =
-                    this.board[move.end[0]][move.end[1] + 1];
-                this.board[move.end[0]][move.end[1] + 1] = "--";
-            }
+            const offset1 = (move.end[1] == 2) ?  1 : -1;
+            const offset2 = (move.end[1] == 2) ? -2 :  1;
+            let row = this.board[move.end[0]];
+
+            row[move.end[1] + offset1] = row[move.end[1] + offset2];
+            row[move.end[1] + offset2] = "--";
         }
 
         // Castle rights update
@@ -822,6 +806,35 @@ class Game_state
         }
     }
 
+    get_castle_side_moves(
+        row, column, moves, king_location, direction, square_count)
+    {
+        for (let i = 1; i <= square_count; ++i)
+        {
+            if (this.board[row][column + i * direction] != "--")
+            {
+                return;
+            }
+        }
+
+        king_location[1] = column + direction;
+        let pin_checks_result1 = this.get_pins_checks();
+        king_location[1] = column + 2 * direction;
+        let pin_checks_result2 = this.get_pins_checks();
+        king_location[1] = column;
+
+        if (!pin_checks_result1.in_check && !pin_checks_result2.in_check)
+        {
+            moves.push(
+                new Move(
+                    [ row, column ],
+                    [ row, column + 2 * direction ],
+                    this.board,
+                    false,
+                    true));
+        }
+    }
+
     get_castle_moves(row, column, moves)
     {
         if (this.in_check)
@@ -846,39 +859,13 @@ class Game_state
 
         if (white_king_side || black_king_side)
         {
-            direction = 1;
-            square_count = 2;
+            this.get_castle_side_moves(row, column, moves, king_location, 1, 2);
         }
 
         if (white_queen_side || black_queen_side)
         {
-            direction = -1;
-            square_count = 3;
-        }
-
-        for (let i = 1; i <= square_count; ++i)
-        {
-            if (!this.board[row][column + i * direction] == "--")
-            {
-                return;
-            }
-        }
-
-        king_location[1] = column + direction;
-        let pin_checks_result1 = this.get_pins_checks();
-        king_location[1] = column + 2 * direction;
-        let pin_checks_result2 = this.get_pins_checks();
-        king_location[1] = column;
-
-        if (!pin_checks_result1.in_check && !pin_checks_result2.in_check)
-        {
-            moves.push(
-                new Move(
-                    [ row, column ],
-                    [ row, column + 2 * direction ],
-                    this.board,
-                    false,
-                    true));
+            this.get_castle_side_moves(
+                row, column, moves, king_location, -1, 3);
         }
     }
 }
