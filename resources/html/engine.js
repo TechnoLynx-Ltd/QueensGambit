@@ -413,7 +413,20 @@ class Game_state
                 {
                     if (moves[i].piece_moved[1] != "K")
                     {
-                        if (!valid_squares.includes(moves[i].end))
+                        let found = false;
+
+                        for (const valid_square of valid_squares)
+                        {
+                            if (
+                                valid_square[0] == moves[i].end[0] &&
+                                valid_square[1] == moves[i].end[1])
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found)
                         {
                             moves.splice(i, 1);
                         }
