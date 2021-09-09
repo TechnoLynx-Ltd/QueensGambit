@@ -13,14 +13,6 @@ const checkmate = 1000;
 const stalemate = 0;
 const max_depth = 3;
 
-function is_ai_turn(white_to_move, is_ai_white)
-{
-    const is_white_ai_turn = white_to_move && is_ai_white;
-    const is_black_ai_turn = !white_to_move && !is_ai_white;
-
-    return is_white_ai_turn || is_black_ai_turn;
-}
-
 function find_random_move(valid_moves)
 {
     return valid_moves[Math.floor(Math.random() * valid_moves.length)];
@@ -28,8 +20,7 @@ function find_random_move(valid_moves)
 
 function find_greedy_move(game_state, valid_moves, is_ai_white)
 {
-    const turn_weight =
-        is_ai_turn(game_state.white_to_move, is_ai_white) ? 1 : -1;
+    const turn_weight = (game_state.white_to_move == is_ai_white) ? 1 : -1;
     let max_score = -checkmate;
     let best_move = null;
     let score;
@@ -87,7 +78,7 @@ function find_minmax_move(
         return { score: score_board(game_state, is_ai_white), move: next_move };
     }
 
-    if (is_ai_turn(game_state.white_to_move, is_ai_white))
+    if (game_state.white_to_move == is_ai_white)
     {
         let max_score = -checkmate;
 
@@ -167,7 +158,8 @@ function score_material(board, is_ai_white)
     {
         for (const square of row)
         {
-            const weight = (is_ai_white && square[0] == "w") ? 1 : -1;
+            const is_piece_white = (square[0] == "w");
+            const weight = (is_ai_white == is_piece_white) ? 1 : -1;
 
             score += weight * piece_weights[square[1]];
         }
@@ -178,7 +170,7 @@ function score_material(board, is_ai_white)
 
 function score_board(game_state, is_ai_white)
 {
-    const weight = is_ai_turn(game_state.white_to_move, is_ai_white) ? 1 : -1;
+    const weight = (game_state.white_to_move == is_ai_white) ? 1 : -1;
 
     if (game_state.checkmate)
     {
