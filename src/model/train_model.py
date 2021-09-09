@@ -42,7 +42,7 @@ if __name__ == '__main__':
     print(y_scr_train.shape)
     print(y_scr_test.shape)
 
-    tfjs_target_dir = "saved_model_js"
+    tfjs_target_dir = "../../saved_model_js"
 
     model = create_model()
 

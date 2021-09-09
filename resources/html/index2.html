@@ -1,7 +1,10 @@
 <html>
 
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.5.2/dist/tf.min.js"></script>
+
 <script src="engine.js"></script>
 <script src="minmax.js"></script>
+<script src="ann.js"></script>
 
 <script type="text/javascript">
 
@@ -16,7 +19,7 @@ let dimension = 8;
 let game_state = new Game_state();
 let game_over = false;
 let made_move = false;
-let ai_type = "minmax";
+let ai_type = "MinMax";
 
 function draw_board()
 {
@@ -105,27 +108,40 @@ function draw_game_state()
 
 function play_ai_turn()
 {
-    let move;
+    let move = null;
+
+    display_ai("calculating");
 
     switch (ai_type)
     {
-        case "minmax":
+        case "MinMax":
         {
             move = find_minmax_best_move(game_state, valid_moves);
             break;
         }
-        case "ann":
+        case "ANN":
         {
+            move = find_model_best_move(game_state, valid_moves);
             break;
         }
     }
 
-    game_state.make_move(move);
-    made_move = true;
+    display_ai("done");
+
+    if (move)
+    {
+        game_state.make_move(move);
+        made_move = true;
+    }
+    else
+    {
+        draw_message("Could not determine move");
+    }
 }
 
 function init()
 {
+    load_model();
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
     square_width = canvas.width / 8;
@@ -133,6 +149,7 @@ function init()
     canvas.addEventListener("click", board_click);
     draw_board();
     draw_pieces();
+    display_ai();
     valid_moves = game_state.get_valid_moves();
 }
 
@@ -152,18 +169,18 @@ function refresh_state()
 
         if (game_state.white_to_move)
         {
-            draw_text("Black wins by checkmate");
+            draw_message("Black wins by checkmate");
         }
         else
         {
-            draw_text("White wins by checkmate");
+            draw_message("White wins by checkmate");
         }
     }
 
     if (game_state.stalemate)
     {
         game_over = true;
-        draw_text("Stalemate");
+        draw_message("Stalemate");
     }
 }
 
@@ -257,15 +274,23 @@ function reset_click()
 
 function minmax_click()
 {
-    ai_type = "minmax";
+    ai_type = "MinMax";
+    display_ai();
 }
 
 function ann_click()
 {
-    ai_type = "ann";
+    ai_type = "ANN";
+    display_ai();
 }
 
-function draw_text(text)
+function display_ai(text = "")
+{
+    document.getElementById("ai_status").innerHTML =
+        "Current AI: " + ai_type + " " + text;
+}
+
+function draw_message(text)
 {
     document.getElementById("messages").innerHTML = text;
 }
@@ -282,10 +307,11 @@ function draw_text(text)
 </div>
 
 <div>
-    <button onclick="minmax_click()">Minmax</button>
+    <button onclick="minmax_click()">MinMax</button>
     <button onclick="ann_click()">ANN</button>
 </div>
 
+<div id="ai_status"></div>
 <div id="messages"></div>
 
 <img id="bB" width="64" height="64" src="../images/bB.png" style="display: none;">

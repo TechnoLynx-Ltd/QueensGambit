@@ -1,5 +1,7 @@
 venv/
 
+saved_model_js/
+
 __pycache__/
 
 .idea/

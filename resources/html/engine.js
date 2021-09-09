@@ -102,7 +102,7 @@ class Game_state
 
     get_position()
     {
-        let result = Array(8).fill(Array(8).fill(0));
+        let result = Array(8).fill(Array(8).fill(Array(12).fill(0)));
 
         for (let row = 0; row < 8; ++row)
         {
