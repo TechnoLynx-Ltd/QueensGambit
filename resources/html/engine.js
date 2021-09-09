@@ -561,18 +561,17 @@ class Game_state
                     const type = end_piece[1];
                     const rook = (0 <= i && i <= 3 && type == "R");
                     const bishop = (4 <= i && i <= 7 && type == "B");
-                    const peasant_direction_white =
+                    const pawn_direction_white =
                         (enemy_color == "w" && 6 <= i && i <= 7);
-                    const peasant_direction_black =
+                    const pawn_direction_black =
                         (enemy_color == "b" && 4 <= i && i <= 5);
-                    const peasant_direction =
-                        (peasant_direction_white || peasant_direction_black);
-                    const peasant =
-                        (j == 1 && type == "P" && peasant_direction);
+                    const pawn_direction =
+                        (pawn_direction_white || pawn_direction_black);
+                    const pawn = (j == 1 && type == "P" && pawn_direction);
                     const king = (j == 1 && type == "K");
                     const queen = (type == "Q");
 
-                    if (rook || bishop || peasant || queen || king)
+                    if (rook || bishop || pawn || queen || king)
                     {
                         // No piece blocking so check
                         if (possible_pin == null)
