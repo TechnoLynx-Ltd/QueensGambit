@@ -295,7 +295,7 @@ class Game_state
             this.board[last_move.start[0]][last_move.start[1]] =
                 last_move.piece_moved;
 
-            if (last_move.end_col == 2)
+            if (last_move.end[1] == 2)
             {
                 end_row[last_move.end[1] - 2] = end_row[last_move.end[1] + 1];
                 end_row[last_move.end[1] + 1] = "--";
@@ -444,6 +444,7 @@ class Game_state
             moves = this.get_all_possible_moves();
         }
 
+        // TODO: once had moves undefined
         if (moves.length == 0)
         {
             if (this.in_check)

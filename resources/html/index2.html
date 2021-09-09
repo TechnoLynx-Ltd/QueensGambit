@@ -1,6 +1,7 @@
 <html>
 
 <script src="engine.js"></script>
+<script src="minmax.js"></script>
 
 <script type="text/javascript">
 
@@ -8,13 +9,14 @@ let canvas, context;
 let square_width, square_height;
 let selected_square = null;
 let player_clicks = [];
-let white_ai = false;
+let white_ai = true;
 let black_ai = false;
 let valid_moves = [];
 let dimension = 8;
 let game_state = new Game_state();
 let game_over = false;
 let made_move = false;
+let ai_type = "minmax";
 
 function draw_board()
 {
@@ -101,26 +103,25 @@ function draw_game_state()
     highlight_square();
 }
 
-function is_ai_turn()
+function play_ai_turn()
 {
-    let result = game_state.white_to_move && white_ai;
+    let move;
 
-    result = result || (!game_state.white_to_move && black_ai);
-    result = result && !game_over;
-
-    return result;
-}
-
-function play_ai_turns()
-{
-    while (is_ai_turn())
+    switch (ai_type)
     {
-        // TODO: decide which move to make
-        game_state.make_move(valid_moves[0]);
-        made_move = true;
-
-        refresh_state();
+        case "minmax":
+        {
+            move = find_minmax_best_move(game_state, valid_moves);
+            break;
+        }
+        case "ann":
+        {
+            break;
+        }
     }
+
+    game_state.make_move(move);
+    made_move = true;
 }
 
 function init()
@@ -129,11 +130,10 @@ function init()
     context = canvas.getContext("2d");
     square_width = canvas.width / 8;
     square_height = canvas.height / 8;
-    canvas.addEventListener("click", click);
+    canvas.addEventListener("click", board_click);
     draw_board();
     draw_pieces();
     valid_moves = game_state.get_valid_moves();
-    play_ai_turns();
 }
 
 function refresh_state()
@@ -167,13 +167,8 @@ function refresh_state()
     }
 }
 
-function click(event)
+function play_human_turn()
 {
-    if (game_over)
-    {
-        return;
-    }
-
     let coordinate_x = event.clientX - canvas.offsetLeft;
     let coordinate_y = event.clientY - canvas.offsetTop;
     let square_x = Math.floor(coordinate_x / square_width);
@@ -215,9 +210,28 @@ function click(event)
             player_clicks = [ selected_square ];
         }
     }
+}
+
+function board_click(event)
+{
+    if (game_over)
+    {
+        return;
+    }
+
+    let is_white_human_turn = (game_state.white_to_move && !white_ai);
+    let is_black_human_turn = (!game_state.white_to_move && !black_ai);
+
+    if (is_white_human_turn || is_black_human_turn)
+    {
+        play_human_turn();
+    }
+    else
+    {
+        play_ai_turn();
+    }
 
     refresh_state();
-    play_ai_turns();
 }
 
 function undo_click()
@@ -227,7 +241,6 @@ function undo_click()
     game_over = false;
 
     refresh_state();
-    play_ai_turns();
 }
 
 function reset_click()
@@ -240,7 +253,16 @@ function reset_click()
     game_over = false;
 
     refresh_state();
-    play_ai_turns();
+}
+
+function minmax_click()
+{
+    ai_type = "minmax";
+}
+
+function ann_click()
+{
+    ai_type = "ann";
 }
 
 function draw_text(text)
@@ -255,8 +277,13 @@ function draw_text(text)
 <canvas width="512" height="512" id="canvas"></canvas>
 
 <div>
-    <button id="undo" onclick="undo_click()">Undo</button>
-    <button id="reset" onclick="reset_click()">Reset</button>
+    <button onclick="undo_click()">Undo</button>
+    <button onclick="reset_click()">Reset</button>
+</div>
+
+<div>
+    <button onclick="minmax_click()">Minmax</button>
+    <button onclick="ann_click()">ANN</button>
 </div>
 
 <div id="messages"></div>
