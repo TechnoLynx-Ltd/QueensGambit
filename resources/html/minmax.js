@@ -54,7 +54,7 @@ function find_greedy_move(game_state, valid_moves, is_ai_white)
     return best_move;
 }
 
-function find_minmax_best_move(game_state, valid_moves)
+export function find_minmax_best_move(game_state, valid_moves)
 {
     const next_move_result =
         find_minmax_move(

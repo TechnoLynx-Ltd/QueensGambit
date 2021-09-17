@@ -1,264 +1,35 @@
 <html>
-<head>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.5/brython.min.js">
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.5/brython_stdlib.min.js">
-</script>
-</head>
 
-<body onload="brython()">
-<!--<script type="text/javascript" src="http://livejs.com/live.js"></script>-->
-<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.5.2/dist/tf.min.js"></script>
+<body onload="window.index.init()">
 
-<script type="text/python">
-from browser import document, alert, window, timer, aio
-from browser.widgets.dialog import InfoDialog
-import javascript
-import engine
-import ai
-import time, subprocess, queue, threading
+<canvas width="512" height="512" id="canvas"></canvas>
 
-# in cmd: python -m http.server
-
-WIDTH = HEIGHT = 512
-DIMENSION = 8
-SQ_SIZE = HEIGHT // DIMENSION
-IMAGES = {}
-
-selected_square = ()
-player_clicks = []
-gs = engine.GameState()
-valid_moves = gs.get_valid_moves()
-game_over = False
-white_ai = False
-black_ai = True
-
-
-def undo_move(evt):
-    global gs
-    global game_over
-    global valid_moves
-    gs.undo_move()
-    valid_moves = gs.get_valid_moves()
-    game_over = False
-    draw_game_state()
-
-def reset_board(evt):
-    global gs
-    global game_over
-    global valid_moves
-    global player_clicks
-    global selected_square
-
-    gs = engine.GameState()
-    valid_moves = gs.get_valid_moves()
-    selected_square = ()
-    player_clicks = []
-    game_over = False
-    draw_game_state()
-
-
-def refresh_moves():
-    valid_moves = gs.get_valid_moves()
-
-
-def get_pos(ev, rect):
-    col = (ev.clientX - rect.left) // SQ_SIZE
-    row = (ev.clientY - rect.top) // SQ_SIZE
-    return row, col
-
-def mouse_click(ev):
-    global selected_square
-    global player_clicks
-    global valid_moves
-    global gs
-
-    draw_game_state()
-    rect = canvas.getBoundingClientRect()
-    row, col = get_pos(ev, rect)
-    human_turn = (gs.white_to_move and not white_ai) or (not gs.white_to_move and not black_ai)
-
-    if not human_turn:
-        play_ai_turn()
-    else:
-        if selected_square == (row, col):
-            selected_square == ()
-            player_clicks = []
-        else:
-            print("new row col")
-            selected_square = (row, col)
-            player_clicks.append(selected_square)
-            highlight_square()
-
-        if len(player_clicks) == 2:
-            move = engine.Move(player_clicks[0], player_clicks[1], gs.board)
-            made_move = False
-            for i in range(len(valid_moves)):
-                if move == valid_moves[i]:
-                    gs.make_move(valid_moves[i])
-                    made_move = True
-                    selected_square = ()
-                    player_clicks = []
-
-            if not made_move:
-                player_clicks = [selected_square]
-
-            else:
-                valid_moves = gs.get_valid_moves()
-                draw_game_state()
-        window.printBoard(gs.board)
-
-
-def play_ai_turn():
-    global selected_square
-    global player_clicks
-    global valid_moves
-    global gs
-    max_score = 0
-    for move in valid_moves:
-        # Make a valid move
-        gs.make_move(move)
-
-        # Expand current position to 4D b/c model input requirement
-        nested_list_pos = gs.get_position()
-        nested_list_pos = [[[[nested_list_pos[i][j][k] for k in range(12)] for j in range(8)] for i in range(8)]
-                           for n in range(1)]  # numpy alternative
-        score = window.predict(nested_list_pos)
-
-
-        if gs.white_to_move:  # White moves
-            # White score
-            score = score[0, 0]
-        else:  # Black moves
-            # Black score
-            score = score[0, 1]
-
-        if score > max_score:
-            max_score = score
-            next_move = move
-
-        # Restore game_state into original position
-        gs.undo_move()
-
-    gs.make_move(next_move)
-    valid_moves = gs.get_valid_moves()
-    draw_game_state()
-
-
-def draw_board():
-    ctx.globalAlpha = 1
-    colors = ["LightGray", "DarkGray"]
-    for r in range(DIMENSION):
-        for c in range(DIMENSION):
-            color = colors[(r + c) % 2]
-            ctx.fillStyle = color
-            ctx.fillRect(c * SQ_SIZE,r * SQ_SIZE,SQ_SIZE, SQ_SIZE)
-
-
-def draw_pieces():
-    global gs
-    ctx.globalAlpha = 1
-    for r in range(DIMENSION):
-        for c in range(DIMENSION):
-            piece = gs.board[r][c]
-            piece_img = document.getElementById(piece)
-            if piece != "--":
-                ctx.drawImage(piece_img, c * SQ_SIZE,r * SQ_SIZE)
-
-
-def draw_game_state():
-    draw_board()
-    draw_pieces()
-    #highlight_square()
-
-
-def highlight_square():
-    global selected_square
-    global player_clicks
-    global valid_moves
-    global gs
-    if selected_square != ():
-        r, c = selected_square
-        if gs.board[r][c][0] == ("w" if gs.white_to_move else "b"):
-            ctx.globalAlpha = 0.5
-            ctx.fillStyle = "green"
-            ctx.fillRect(c * SQ_SIZE,r * SQ_SIZE,SQ_SIZE, SQ_SIZE)
-            ctx.fillStyle = "blue"
-            for move in valid_moves:
-                if move.start_row == r and move.start_col == c:
-                    ctx.fillRect(move.end_col*SQ_SIZE,move.end_row*SQ_SIZE,SQ_SIZE, SQ_SIZE)
-
-
-window.loadModel()
-
-document["chessboard"].bind("mousedown", mouse_click)
-canvas = document["chessboard"]
-ctx = document["chessboard"].getContext("2d")
-rect = canvas.getBoundingClientRect()
-document["undo"].bind("click", undo_move)
-document["reset"].bind("click", reset_board)
-draw_game_state()
-
-print(window.getMove(gs.get_valid_moves()))
-
-move = window.getMove(gs.get_valid_moves())
-
-print(move.start_row)
-print(move.start_col)
-
-</script>
-
-<script type="text/javascript" onload="brython()">
-    function getMove(moves){
-    return moves[0]
-    }
-
-    function printBoard(board){
-    console.log(board)
-    }
-
-    async function loadModel(){
-        model = await tf.loadLayersModel('saved_model_js/model.json');
-        console.log("Model loaded")
-        console.log(model.summary())
-}
-
-    var predict = function(input) {
-        if (typeof window.model !== "undefined") {
-            input = tf.tensor(input)
-            window.model.predict(input).array().then(function(scores){
-            console.log(scores)
-            return scores
-            });
-        } else {
-            // The model takes a bit to load, if we are too fast, wait
-            setTimeout(function(){predict(input)}, 1);
-        }
-    }
-
-</script>
-
-<canvas width="512" height="512" id="chessboard"></canvas>
-
-<br> </br>
 <div>
-<button id="undo">Undo</button>
-<button id="reset">Reset</button>
+    <button onclick="window.index.undo_click()">Undo</button>
+    <button onclick="window.index.reset_click()">Reset</button>
 </div>
 
-<img id="bB" width="64" height="64" src="../images/bB.png" style="display: none;">
-<img id="bK" width="64" height="64" src="../images/bK.png" style="display: none;">
-<img id="bN" width="64" height="64" src="../images/bN.png" style="display: none;">
-<img id="bR" width="64" height="64" src="../images/bR.png" style="display: none;">
-<img id="bQ" width="64" height="64" src="../images/bQ.png" style="display: none;">
-<img id="bP" width="64" height="64" src="../images/bP.png" style="display: none;">
-<img id="wB" width="64" height="64" src="../images/wB.png" style="display: none;">
-<img id="wK" width="64" height="64" src="../images/wK.png" style="display: none;">
-<img id="wN" width="64" height="64" src="../images/wN.png" style="display: none;">
-<img id="wR" width="64" height="64" src="../images/wR.png" style="display: none;">
-<img id="wQ" width="64" height="64" src="../images/wQ.png" style="display: none;">
-<img id="wP" width="64" height="64" src="../images/wP.png" style="display: none;">
+<div>
+    <button onclick="window.index.minmax_click()">MinMax</button>
+    <button onclick="window.index.ann_click()">ANN</button>
+    <button onclick="window.index.player_click()">Player</button>
+</div>
+
+<div id="ai_status"></div>
+<div id="messages"></div>
+
+<img id="bB" width="64" height="64" style="display: none;">
+<img id="bK" width="64" height="64" style="display: none;">
+<img id="bN" width="64" height="64" style="display: none;">
+<img id="bR" width="64" height="64" style="display: none;">
+<img id="bQ" width="64" height="64" style="display: none;">
+<img id="bP" width="64" height="64" style="display: none;">
+<img id="wB" width="64" height="64" style="display: none;">
+<img id="wK" width="64" height="64" style="display: none;">
+<img id="wN" width="64" height="64" style="display: none;">
+<img id="wR" width="64" height="64" style="display: none;">
+<img id="wQ" width="64" height="64" style="display: none;">
+<img id="wP" width="64" height="64" style="display: none;">
 
 
 </body>

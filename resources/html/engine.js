@@ -1,34 +1,4 @@
-function check_direction(pin_state, direction)
-{
-    const same_direction =
-        pin_state.direction[0] == direction[0] &&
-        pin_state.direction[1] == direction[1];
-
-    if (!pin_state.pinned || same_direction)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-function check_double_direction(pin_state, direction)
-{
-    const opposite_direction =
-        pin_state.direction[0] == -direction[0] &&
-        pin_state.direction[1] == -direction[1];
-
-    return check_direction(pin_state, direction) || opposite_direction;
-}
-
-function check_indices(row, column)
-{
-    return (0 <= row && row <= 7 && 0 <= column && column <= 7);
-}
-
-class Game_state
+export class Game_state
 {
     constructor()
     {
@@ -108,8 +78,7 @@ class Game_state
         {
             for (let column = 0; column < 8; ++column)
             {
-                const piece_index =
-                    this.position_dict[game_state.board[row][column]];
+                const piece_index = this.position_dict[this.board[row][column]];
 
                 result[row][column][piece_index] = 1;
             }
@@ -540,7 +509,7 @@ class Game_state
 
                 const end_piece = this.board[test_row][test_column];
 
-                if (end_piece[0] == actor_color && end_piece[1] != "K")
+                if (end_piece[0] == actor_color)
                 {
                     if (possible_pin == null)
                     {
@@ -633,7 +602,9 @@ class Game_state
     {
         for (let i = this.pins.length - 1; i > -1; --i)
         {
-            if (this.pins[i][0] == row && this.pins[i][1] == column)
+            const location = this.pins[i].location;
+
+            if (location[0] == row && location[1] == column)
             {
                 const pin = this.pins[i];
                 const direction = [ pin.direction[0], pin.direction[1] ];
@@ -883,19 +854,7 @@ class Game_state
     }
 }
 
-class Castle_rights
-{
-    constructor(
-        white_queen_side, white_king_side, black_queen_side, black_king_side)
-    {
-        this.white_queen_side = white_queen_side;
-        this.white_king_side = white_king_side;
-        this.black_queen_side = black_queen_side;
-        this.black_king_side = black_king_side;
-    }
-}
-
-class Move
+export class Move
 {
     constructor(start, end, board, en_passant_move = false, castle_move = false)
     {
@@ -925,4 +884,46 @@ class Move
     {
         return this.move_id == other.move_id;
     }
+}
+
+class Castle_rights
+{
+    constructor(
+        white_queen_side, white_king_side, black_queen_side, black_king_side)
+    {
+        this.white_queen_side = white_queen_side;
+        this.white_king_side = white_king_side;
+        this.black_queen_side = black_queen_side;
+        this.black_king_side = black_king_side;
+    }
+}
+
+function check_direction(pin_state, direction)
+{
+    const same_direction =
+        pin_state.direction[0] == direction[0] &&
+        pin_state.direction[1] == direction[1];
+
+    if (!pin_state.pinned || same_direction)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+function check_double_direction(pin_state, direction)
+{
+    const opposite_direction =
+        pin_state.direction[0] == -direction[0] &&
+        pin_state.direction[1] == -direction[1];
+
+    return check_direction(pin_state, direction) || opposite_direction;
+}
+
+function check_indices(row, column)
+{
+    return (0 <= row && row <= 7 && 0 <= column && column <= 7);
 }

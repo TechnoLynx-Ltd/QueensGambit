@@ -1,13 +1,30 @@
+import * as tf from "@tensorflow/tfjs";
+
+import model_config_json from "../../saved_model_js/model.json";
+import model_weights from "../../saved_model_js/group1-shard1of1.bin";
+import { Inline_model_handler } from "./Inline_model_handler";
+
 let model = null;
 
-async function load_model()
+export async function load_model()
 {
-    model = await tf.loadLayersModel("../../saved_model_js/model.json");
+    // cut off the format identifier ("data:application/octet-stream;base64,")
+    model_weights = model_weights.substring(37);
+    model =
+        await tf.loadLayersModel(
+            new Inline_model_handler(model_config_json, model_weights));
     console.log("Model loaded");
     console.log(model.summary());
+
+    for (const layer of model.layers)
+    {
+        //console.log(layer);
+        console.log(layer.getConfig());
+        console.log(layer.getWeights());
+    }
 }
 
-function find_model_best_move(game_state, valid_moves)
+export function find_model_best_move(game_state, valid_moves)
 {
     let max_score = 0;
     let next_move = null;
