@@ -55,8 +55,6 @@ def main():
 
     # Load trained model
     model = keras.models.load_model('../model')
-    print(model.summary)
-    for layer in model.layers: print(layer.get_config(), layer.get_weights())
 
     while running:
         human_turn = (gs.white_to_move and not white_ai) or (not gs.white_to_move and not black_ai)

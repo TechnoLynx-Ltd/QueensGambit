@@ -13,15 +13,6 @@ export async function load_model()
     model =
         await tf.loadLayersModel(
             new Inline_model_handler(model_config_json, model_weights));
-    console.log("Model loaded");
-    console.log(model.summary());
-
-    for (const layer of model.layers)
-    {
-        //console.log(layer);
-        console.log(layer.getConfig());
-        console.log(layer.getWeights());
-    }
 }
 
 export function find_model_best_move(game_state, valid_moves)

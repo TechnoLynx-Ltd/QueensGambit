@@ -15,6 +15,24 @@ import wR from "../images/wR.png";
 import wQ from "../images/wQ.png";
 import wP from "../images/wP.png";
 
+let image_map =
+{
+    "bB": bB,
+    "bK": bK,
+    "bN": bN,
+    "bR": bR,
+    "bQ": bQ,
+    "bP": bP,
+    "wB": wB,
+    "wK": wK,
+    "wN": wN,
+    "wR": wR,
+    "wQ": wQ,
+    "wP": wP,
+};
+
+let images = {};
+
 let canvas, context;
 let square_width, square_height;
 let selected_square = null;
@@ -37,21 +55,14 @@ export function init()
     square_height = canvas.height / 8;
     canvas.addEventListener("click", board_click);
 
-    document.getElementById("bB").src = bB;
-    document.getElementById("bK").src = bK;
-    document.getElementById("bN").src = bN;
-    document.getElementById("bR").src = bR;
-    document.getElementById("bQ").src = bQ;
-    document.getElementById("bP").src = bP;
-    document.getElementById("wB").src = wB;
-    document.getElementById("wK").src = wK;
-    document.getElementById("wN").src = wN;
-    document.getElementById("wR").src = wR;
-    document.getElementById("wQ").src = wQ;
-    document.getElementById("wP").src = wP;
+    for (let [name, image] of Object.entries(image_map))
+    {
+        images[name] = new Image(64, 64);
+        images[name].onload = draw_pieces;
+        images[name].src = image;
+    }
 
     draw_board();
-    draw_pieces();
     display_ai();
     valid_moves = game_state.get_valid_moves();
 }
@@ -124,7 +135,7 @@ function draw_pieces()
         for (let c = 0; c < dimension; ++c)
         {
             let piece = game_state.board[r][c];
-            let piece_image = document.getElementById(piece);
+            let piece_image = images[piece];
 
             if (piece != "--")
             {

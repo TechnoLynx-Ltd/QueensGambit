@@ -72,13 +72,23 @@ export class Game_state
 
     get_position()
     {
-        let result = Array(8).fill(Array(8).fill(Array(12).fill(0)));
+        let result = [];
 
         for (let row = 0; row < 8; ++row)
         {
+            result[row] = [];
+
             for (let column = 0; column < 8; ++column)
             {
-                const piece_index = this.position_dict[this.board[row][column]];
+                result[row][column] = []
+
+                for (let piece_index = 0; piece_index < 12; ++piece_index)
+                {
+                    result[row][column][piece_index] = 0;
+                }
+
+                const piece_index =
+                    this.position_dict[this.board[row][column]];
 
                 result[row][column][piece_index] = 1;
             }
@@ -355,7 +365,7 @@ export class Game_state
 
                 if (check_piece[1] == "N")
                 {
-                    valid_squares = [ check ];
+                    valid_squares = [ check.location ];
                 }
                 else
                 {
