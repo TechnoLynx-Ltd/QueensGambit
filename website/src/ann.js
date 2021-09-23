@@ -1,8 +1,8 @@
 import * as tf from "@tensorflow/tfjs";
 import "@tensorflow/tfjs-backend-cpu";
 
-import model_config_json from "../../graph_model_js/model.json";
-import model_weights from "../../graph_model_js/group1-shard1of1.bin";
+import model_config_json from "../graph_model_js/model.json";
+import model_weights from "../graph_model_js/group1-shard1of1.bin";
 import { Inline_model_handler } from "./Inline_model_handler";
 
 let model = null;

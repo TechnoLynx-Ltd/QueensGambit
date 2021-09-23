@@ -6,9 +6,9 @@ module.exports =
 {
     devServer:
     {
-        static: "./resources/html/dist",
+        static: "./dist",
     },
-    entry: "./resources/html/index.js",
+    entry: "./src/index.js",
     mode: "production",
     module:
     {
@@ -48,14 +48,14 @@ module.exports =
         clean: true,
         filename: "main.js",
         library: "index",
-        path: path.resolve(__dirname, "./resources/html/dist"),
+        path: path.resolve(__dirname, "./dist"),
         publicPath: "",
     },
     plugins:
     [
         new HtmlWebpackPlugin(
         {
-            template: "./resources/html/index.html",
+            template: "./src/index.html",
             inject: "head",
         }),
         new HtmlInlineScriptPlugin(),
