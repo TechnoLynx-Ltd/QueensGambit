@@ -2,18 +2,18 @@ import { Game_state, Move } from "./engine.js";
 import { find_minmax_best_move } from "./minmax.js";
 import { load_model, find_model_best_move } from "./ann.js";
 
-import bB from "../images/bB.png";
-import bK from "../images/bK.png";
-import bN from "../images/bN.png";
-import bR from "../images/bR.png";
-import bQ from "../images/bQ.png";
-import bP from "../images/bP.png";
-import wB from "../images/wB.png";
-import wK from "../images/wK.png";
-import wN from "../images/wN.png";
-import wR from "../images/wR.png";
-import wQ from "../images/wQ.png";
-import wP from "../images/wP.png";
+import bB from "../../resources/images/bB.png";
+import bK from "../../resources/images/bK.png";
+import bN from "../../resources/images/bN.png";
+import bR from "../../resources/images/bR.png";
+import bQ from "../../resources/images/bQ.png";
+import bP from "../../resources/images/bP.png";
+import wB from "../../resources/images/wB.png";
+import wK from "../../resources/images/wK.png";
+import wN from "../../resources/images/wN.png";
+import wR from "../../resources/images/wR.png";
+import wQ from "../../resources/images/wQ.png";
+import wP from "../../resources/images/wP.png";
 
 let image_map =
 {
