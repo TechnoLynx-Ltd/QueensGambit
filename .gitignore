@@ -1,17 +1,25 @@
-venv/
-
-saved_model_js/
-
 __pycache__/
 
 .idea/
 
+custom_tfjs/
+
 data/
+
+graph_model_js/
 
 model/
 
-*.pyc
+node_modules/
+
+resources/html/dist/
+
+saved_model_js/
+
+venv/
+
+*.pb
 
 *.npy
 
-*.pb
+*.pyc
