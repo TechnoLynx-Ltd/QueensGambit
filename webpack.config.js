@@ -46,6 +46,13 @@ module.exports = {
     ],
     resolve:
     {
-        extensions: ['.tsx', '.ts', '.js'],
+        extensions: [".tsx", ".ts", ".js"],
+        alias:
+        {
+            "@tensorflow/tfjs$":
+                path.resolve(__dirname, "./custom_tfjs/custom_tfjs.js"),
+            "@tensorflow/tfjs-core$":
+                path.resolve(__dirname, "./custom_tfjs/custom_tfjs_core.js"),
+        }
     },
 };
