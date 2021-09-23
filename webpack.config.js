@@ -2,19 +2,35 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin');
 const path = require("path");
 
-module.exports = {
+module.exports =
+{
     devServer:
     {
         static: "./resources/html/dist",
     },
     entry: "./resources/html/index.js",
+    mode: "production",
     module:
     {
         rules:
         [
             {
-                test: /\.(png|svg|jpg|jpeg|gif|bin)$/i,
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
                 type: "asset/inline",
+            },
+            {
+                test: /\.(bin)$/i,
+                type: "asset/inline",
+                generator:
+                {
+                    dataUrl: content =>
+                    {
+                        const base64_text =
+                            Buffer.from(content).toString("base64");
+
+                        return spacify(base64_text);
+                    }
+                }
             },
             {
                 test: /\.json$/i,
@@ -56,3 +72,20 @@ module.exports = {
         }
     },
 };
+
+function spacify(text)
+{
+    const chunk_size = 10;
+    let spacified_text = "";
+    let i = 0;
+
+    while ((i + 1) * chunk_size < text.length)
+    {
+        spacified_text += text.substr(i * chunk_size, chunk_size) + " ";
+        ++i;
+    }
+
+    spacified_text += text.substr(i * chunk_size);
+
+    return spacified_text;
+}

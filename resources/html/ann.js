@@ -1,18 +1,18 @@
 import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-backend-cpu";
 
-import model_config_json from "../../saved_model_js/model.json";
-import model_weights from "../../saved_model_js/group1-shard1of1.bin";
+import model_config_json from "../../graph_model_js/model.json";
+import model_weights from "../../graph_model_js/group1-shard1of1.bin";
 import { Inline_model_handler } from "./Inline_model_handler";
 
 let model = null;
 
 export async function load_model()
 {
-    // cut off the format identifier ("data:application/octet-stream;base64,")
-    model_weights = model_weights.substring(37);
-    model =
-        await tf.loadLayersModel(
-            new Inline_model_handler(model_config_json, model_weights));
+    let inline_model_handler =
+        new Inline_model_handler(model_config_json, unspacify(model_weights));
+
+    model = await tf.loadGraphModel(inline_model_handler);
 }
 
 export function find_model_best_move(game_state, valid_moves)
@@ -54,4 +54,22 @@ export function find_model_best_move(game_state, valid_moves)
     }
 
     return next_move;
+}
+
+function unspacify(text)
+{
+    const chunk_size = 10;
+    const space_chunk_size = chunk_size + 1;
+    let result = "";
+    let i = 0;
+
+    while ((i + 1) * space_chunk_size < text.length)
+    {
+        result += text.substr(space_chunk_size * i, chunk_size);
+        ++i;
+    }
+
+    result += text.substr(i * space_chunk_size);
+
+    return result;
 }
