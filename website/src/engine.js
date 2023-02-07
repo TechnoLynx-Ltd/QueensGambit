@@ -14,6 +14,18 @@ export class Game_state
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         ];
 
+        this.board =
+        [
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "bK", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "bP"],
+            ["--", "--", "--", "--", "--", "--", "wK", "--"]
+        ];
+
         this.position_dict =
         {
             "wP": 0,
@@ -415,7 +427,7 @@ export class Game_state
             // Double check
             else
             {
-                moves = this.get_king_moves(king_row, king_column, moves);
+                this.get_king_moves(king_row, king_column, moves);
             }
         }
         else
@@ -423,7 +435,6 @@ export class Game_state
             moves = this.get_all_possible_moves();
         }
 
-        // TODO: once had moves undefined
         if (moves.length == 0)
         {
             if (this.in_check)
