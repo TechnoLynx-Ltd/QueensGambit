@@ -37,14 +37,14 @@ let canvas, context;
 let square_width, square_height;
 let selected_square = null;
 let player_clicks = [];
-let white_ai = true;
-let black_ai = false;
+let white_ai = false;
+let black_ai = true;
 let valid_moves = [];
 let dimension = 8;
 let game_state = new Game_state();
 let game_over = false;
 let made_move = false;
-let ai_type = "MinMax";
+let ai_type = "";
 
 export function init()
 {
@@ -64,6 +64,7 @@ export function init()
 
     draw_board();
     display_ai();
+    draw_message("Please, choose a type for the AI model");
     valid_moves = game_state.get_valid_moves();
 }
 
@@ -84,26 +85,33 @@ export function reset_click()
     player_clicks = [];
     made_move = false;
     game_over = false;
+    ai_type = "";
+    display_ai();
 
     refresh_state();
 }
 
 export function minmax_click()
 {
-    ai_type = "MinMax";
-    display_ai();
+    if (ai_type.length == 0) {
+        ai_type = "MinMax";
+        display_ai();
+        draw_message("Please, choose a piece to move by clicking on it, then click on the board to activate your AI opponent.");
+    }
+    else
+        draw_message("You can't change the type of AI model during the game. Please, press reset and start-over");
 }
 
 export function ann_click()
 {
-    ai_type = "ANN";
-    display_ai();
-}
+    if (ai_type.length == 0) {
+        ai_type = "ANN";
+        display_ai();
+        draw_message("Please, choose a piece to move by clicking on it, then click on the board to activate your AI opponent.");
+    }
+    else
+        draw_message("You can't change the type of AI model during the game. Please, press reset and start-over");
 
-export function player_click()
-{
-    ai_type = "Player";
-    display_ai();
 }
 
 function draw_board()
@@ -209,11 +217,6 @@ function play_ai_turn()
             move = find_model_best_move(game_state, valid_moves);
             break;
         }
-        case "Player":
-        {
-            play_human_turn();
-            return;
-        }
     }
 
     display_ai("done");
@@ -231,33 +234,41 @@ function play_ai_turn()
 
 function refresh_state()
 {
-    if (made_move)
-    {
-        valid_moves = game_state.get_valid_moves();
-        made_move = false;
+    if (game_state.white_to_move) {
+        draw_message("It is White's turn");
     }
 
-    draw_game_state();
+    else {
+        draw_message("It is Black's turn");
+    }
 
-    if (game_state.checkmate)
-    {
+    if (game_state.checkmate) {
         game_over = true;
 
-        if (game_state.white_to_move)
-        {
+        if (game_state.white_to_move) {
             draw_message("Black wins by checkmate");
         }
-        else
-        {
+        else {
             draw_message("White wins by checkmate");
         }
     }
 
-    if (game_state.stalemate)
-    {
+    else if (game_state.stalemate) {
         game_over = true;
         draw_message("Stalemate");
+        if (game_state.white_to_move) {
+            draw_message("Black wins by stalemate");
+        }
+        else {
+            draw_message("White wins by stalemate");
+        }
     }
+
+    if (made_move) {
+        valid_moves = game_state.get_valid_moves();
+        made_move = false;
+    }
+    draw_game_state();
 }
 
 function play_human_turn()
@@ -330,10 +341,11 @@ function board_click(event)
 function display_ai(text = "")
 {
     document.getElementById("ai_status").innerHTML =
-        "Current AI: " + ai_type + " " + text;
+        "Current AI model: " + ai_type + " " + text;
 }
 
 function draw_message(text)
 {
-    document.getElementById("messages").innerHTML = text;
+    document.getElementById("game_status").innerHTML =
+    "Game Status: " + text;
 }
