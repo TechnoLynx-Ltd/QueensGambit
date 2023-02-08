@@ -70,7 +70,7 @@ export function init()
 
 export function undo_click()
 {
-    if (white_to_move) {
+    if (!this.white_to_move) {
         game_state.undo_move();
     }
     game_state.undo_move();
