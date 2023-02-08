@@ -70,6 +70,9 @@ export function init()
 
 export function undo_click()
 {
+    if (white_to_move) {
+        game_state.undo_move();
+    }
     game_state.undo_move();
     made_move = true;
     game_over = false;
@@ -316,7 +319,13 @@ function play_human_turn()
     }
 }
 
-function board_click(event)
+function delay(milliseconds){
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds);
+    });
+}
+
+async function board_click(event)
 {
     if (game_over)
     {
@@ -329,13 +338,14 @@ function board_click(event)
     if (is_white_human_turn || is_black_human_turn)
     {
         play_human_turn();
+        let human_finished = made_move;
+        refresh_state();
+        if(human_finished){
+            await delay(500);
+            play_ai_turn();
+        }
+        refresh_state();
     }
-    else
-    {
-        play_ai_turn();
-    }
-
-    refresh_state();
 }
 
 function display_ai(text = "")
