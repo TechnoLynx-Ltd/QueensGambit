@@ -14,6 +14,31 @@ export class Game_state
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         ];
 
+        // this.board =
+        // [
+        //     ["--", "--", "--", "--", "bK", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["wP", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "wK", "--", "--", "--"]
+        // ];
+
+        // this.board =
+        // [
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "wQ", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "bK", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "wK", "--", "--"],
+        //     ["--", "--", "--", "--", "--", "--", "--", "--"]
+        // ];
+
+
         this.position_dict =
         {
             "wP": 0,
@@ -68,6 +93,7 @@ export class Game_state
         this.checks = [];
         this.checkmate = false;
         this.stalemate = false;
+        this.promotion_pieces = ['Q', 'R', 'B', 'N'];
     }
 
     get_position()
@@ -176,8 +202,7 @@ export class Game_state
         if (move.promotion_move)
         {
             const color = this.white_to_move ? "w" : "b";
-
-            this.board[move.end[0]][move.end[1]] = color + "Q";
+            this.board[move.end[0]][move.end[1]] = color + move.promote_to;
         }
         else
         {
@@ -499,9 +524,9 @@ export class Game_state
             [ 1, -1],
             [ 1,  1]
         ];
-
         for (let i = 0; i < directions.length; ++i)
         {
+
             const direction = directions[i];
             let possible_pin = null;
 
@@ -515,10 +540,9 @@ export class Game_state
                 {
                     break;
                 }
-
                 const end_piece = this.board[test_row][test_column];
 
-                if (end_piece[0] == actor_color)
+                if (end_piece[0] == actor_color && end_piece[1] != 'K')
                 {
                     if (possible_pin == null)
                     {
@@ -548,7 +572,6 @@ export class Game_state
                     const pawn = (j == 1 && type == "P" && pawn_direction);
                     const king = (j == 1 && type == "K");
                     const queen = (type == "Q");
-
                     if (rook || bishop || pawn || queen || king)
                     {
                         // No piece blocking so check
@@ -579,7 +602,6 @@ export class Game_state
                 }
             }
         }
-
         for (const direction of this.knight_offsets)
         {
             const test_row = king_row + direction[0];
@@ -635,8 +657,18 @@ export class Game_state
 
         if (front_empty && check_direction(pin_state, [y, 0]))
         {
-            moves.push(
+            let current_move = new Move([ row, column ], [ row + y, column ], this.board);
+            if (current_move.promotion_move){
+                for (let promoting of this.promotion_pieces){
+                    moves.push(
+                        new Move([ row, column ], [ row + y, column ], this.board, false, false, promoting));
+                }
+            }else{
+                moves.push(
                 new Move([ row, column ], [ row + y, column ], this.board));
+            }
+            // moves.push(
+            //     new Move([ row, column ], [ row + y, column ], this.board));
 
             const initial_row = (this.white_to_move ? 6 : 1);
 
@@ -776,12 +808,20 @@ export class Game_state
             {
                 continue;
             }
-
-            king_location[0] = current_row;
-            king_location[1] = current_column;
-            pin_checks_result = this.get_pins_checks();
-            king_location[0] = row;
-            king_location[1] = column;
+            
+            if(this.white_to_move){
+                this.white_king_location[0] = current_row;
+                this.white_king_location[1] = current_column;
+                pin_checks_result = this.get_pins_checks();
+                this.white_king_location[0] = row;
+                this.white_king_location[1] = column;
+            } else {
+                this.black_king_location[0] = current_row;
+                this.black_king_location[1] = current_column;
+                pin_checks_result = this.get_pins_checks();
+                this.black_king_location[0] = row;
+                this.black_king_location[1] = column;
+            }
 
             if (!pin_checks_result.in_check)
             {
@@ -865,7 +905,7 @@ export class Game_state
 
 export class Move
 {
-    constructor(start, end, board, en_passant_move = false, castle_move = false)
+    constructor(start, end, board, en_passant_move = false, castle_move = false, promote_to = 'Q')
     {
         this.start = start;
         this.end = end;
@@ -879,6 +919,7 @@ export class Move
         this.promotion_move = false;
         this.en_passant_move = en_passant_move;
         this.castle_move = castle_move;
+        this.promote_to = promote_to
 
         const white_promotion = (this.end[0] == 0 && this.piece_moved == "wP");
         const black_promotion = (this.end[0] == 7 && this.piece_moved == "bP");
@@ -891,7 +932,7 @@ export class Move
 
     equals(other)
     {
-        return this.move_id == other.move_id;
+        return this.move_id == other.move_id && this.promote_to == other.promote_to;
     }
 }
 
