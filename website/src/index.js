@@ -315,6 +315,7 @@ function play_human_turn()
         if (!made_move)
         {
             player_clicks = [ selected_square ];
+        } else {
         }
     }
 }

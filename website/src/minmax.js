@@ -78,9 +78,13 @@ function find_minmax_move(
         return { score: score_board(game_state, is_ai_white), move: next_move };
     }
 
-    if (game_state.white_to_move == is_ai_white)
+    if(valid_moves.length == 0){
+        return { score: score_board(game_state, is_ai_white), move: next_move };
+    }
+
+    if (game_state.white_to_move)
     {
-        let max_score = -checkmate;
+        let max_score = -checkmate - 1;
 
         for (const move of valid_moves)
         {
@@ -115,7 +119,7 @@ function find_minmax_move(
     }
     else
     {
-        let min_score = checkmate;
+        let min_score = checkmate + 1;
 
         for (const move of valid_moves)
         {
@@ -159,7 +163,7 @@ function score_material(board, is_ai_white)
         for (const square of row)
         {
             const is_piece_white = (square[0] == "w");
-            const weight = (is_ai_white == is_piece_white) ? 1 : -1;
+            const weight = is_piece_white ? 1 : -1;
 
             score += weight * piece_weights[square[1]];
         }
@@ -170,7 +174,7 @@ function score_material(board, is_ai_white)
 
 function score_board(game_state, is_ai_white)
 {
-    const weight = (game_state.white_to_move == is_ai_white) ? 1 : -1;
+    const weight = game_state.white_to_move ? 1 : -1;
 
     if (game_state.checkmate)
     {
