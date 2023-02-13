@@ -99,7 +99,7 @@ export function minmax_click()
     if (ai_type.length == 0) {
         ai_type = "MinMax";
         display_ai();
-        draw_message("Please, choose a piece to move by clicking on it, then click on the board to activate your AI opponent.");
+        draw_message("Please, choose a piece to move by clicking on it, then wait for your AI opponent.");
     }
     else
         draw_message("You can't change the type of AI model during the game. Please, press reset and start-over");
@@ -110,7 +110,7 @@ export function ann_click()
     if (ai_type.length == 0) {
         ai_type = "ANN";
         display_ai();
-        draw_message("Please, choose a piece to move by clicking on it, then click on the board to activate your AI opponent.");
+        draw_message("Please, choose a piece to move by clicking on it, then wait for your AI opponent.");
     }
     else
         draw_message("You can't change the type of AI model during the game. Please, press reset and start-over");
