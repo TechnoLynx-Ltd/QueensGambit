@@ -1,22 +1,19 @@
 <html>
-
+<head></head>
 <body onload="window.index.init()">
 
 <canvas width="512" height="512" id="canvas"></canvas>
 
-<div>
-    <button onclick="window.index.undo_click()">Undo</button>
-    <button onclick="window.index.reset_click()">Reset</button>
-</div>
-
+<div id="game_status"></div>
+<div id="ai_status"></div>
 <div>
     <button onclick="window.index.minmax_click()">MinMax</button>
     <button onclick="window.index.ann_click()">ANN</button>
-    <button onclick="window.index.player_click()">Player</button>
 </div>
-
-<div id="ai_status"></div>
-<div id="messages"></div>
-
+<div>
+    <button onclick="window.index.undo_click()">Undo</button>
+    <button onclick="window.index.reset_click()">Reset</button>
+</div>  
+<script type="text/javascript" src="index.js"></script>
 </body>
 </html>
