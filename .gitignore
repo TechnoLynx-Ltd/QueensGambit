@@ -1,19 +1,29 @@
-venv/
-
 __pycache__/
-
-.pyc
-
-*.npy
 
 .idea/
 
-model_trained/
+!/python/model/
+/python/model/**
+!/python/model/__init__.py
+!/python/model/model.py
+!/python/model/train_model.py
 
-Chess/data
+data/
 
-Chess/ficsgamesdb_202001_chess2000_nomovetimes_195915.pgn
+saved_model_js/
 
-Chess/100.pgn
+venv/
 
-Chess/*.npy
+website/custom_tfjs/
+
+website/dist/
+
+website/graph_model_js/
+
+website/node_modules/
+
+*.pb
+
+*.npy
+
+*.pyc

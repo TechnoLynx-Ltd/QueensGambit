@@ -240,11 +240,11 @@ def load_data_from_pgn(filenames, save_to_file=False, debug=False):
 
     if save_to_file:
         print("Saving dataset to file")
-        with open("../data/npy/X_positions.npy", 'wb') as X_pos_file:
+        with open("../../data/npy/X_positions.npy", 'wb') as X_pos_file:
             np.save(X_pos_file, X_position)
-        with open("../data/npy/y_scores.npy", "wb") as y_scr_file:
+        with open("../../data/npy/y_scores.npy", "wb") as y_scr_file:
             np.save(y_scr_file, y_score)
-        with open("../data/npy/y_moves.npy", "wb") as y_res_file:
+        with open("../../data/npy/y_moves.npy", "wb") as y_res_file:
             np.save(y_res_file, y_moves)
 
     return X_position, y_score, y_moves
@@ -254,13 +254,13 @@ if __name__ == '__main__':
     from os import listdir
     from os.path import isfile, join
 
-    path = '../data/pgn/'
+    path = '../../data/pgn/'
 
     filenames = [path + f for f in listdir(path) if isfile(join(path, f))]
 
-    load_data_from_pgn(filenames, save_to_file=True, debug=True)
+    load_data_from_pgn(filenames, save_to_file=True, debug=False)
 
     print('Open and check .npy files')
-    print(np.load("../data/npy/X_positions.npy").shape)
-    print(np.load("../data/npy/y_moves.npy").shape)
-    print(np.load("../data/npy/y_scores.npy").shape)
+    print(np.load("../../data/npy/X_positions.npy").shape)
+    print(np.load("../../data/npy/y_moves.npy").shape)
+    print(np.load("../../data/npy/y_scores.npy").shape)

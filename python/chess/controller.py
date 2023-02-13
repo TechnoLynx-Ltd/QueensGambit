@@ -1,13 +1,15 @@
 """
-Module to control the chess engine by handling user input.
+Module to control the chess engine by handling user input
 """
+
 import pygame as p
 import os
 from tensorflow import keras
 
-from Chess import ChessEngine
-import ChessAI
+import ai
+import engine
 
+# Constants
 WIDTH = HEIGHT = 512
 DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
@@ -27,8 +29,9 @@ def init_images():
     Initialize images
     """
     pieces = ["bB", "bK", "bN", "bP", "bQ", "bR", "wB", "wK", "wN", "wP", "wQ", "wR"]
+    path = "../../resources/images/"
     for piece in pieces:
-        IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
+        IMAGES[piece] = p.transform.scale(p.image.load(path + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
 
 def main():
@@ -39,7 +42,7 @@ def main():
     screen = p.display.set_mode((WIDTH, HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
-    gs = ChessEngine.GameState()
+    gs = engine.GameState()
     init_images()
     running = True
     selected_square = ()
@@ -51,7 +54,7 @@ def main():
     black_ai = False
 
     # Load trained model
-    model = keras.models.load_model('model_trained')
+    model = keras.models.load_model('../model')
 
     while running:
         human_turn = (gs.white_to_move and not white_ai) or (not gs.white_to_move and not black_ai)
@@ -66,7 +69,7 @@ def main():
 
                 elif not game_over and not human_turn:
                     # chosen_move = ChessAI.find_minmax_best_move(gs, valid_moves)
-                    chosen_move = ChessAI.find_model_best_move(gs, valid_moves, model)
+                    chosen_move = ai.find_model_best_move(gs, valid_moves, model)
                     gs.make_move(chosen_move)
                     made_move = True
 
@@ -76,7 +79,7 @@ def main():
                     made_move = True
                     game_over = False
                 if e.key == p.K_r:
-                    gs = ChessEngine.GameState()
+                    gs = engine.GameState()
                     valid_moves = gs.get_valid_moves()
                     selected_square = ()
                     player_clicks = []
@@ -178,7 +181,7 @@ def play_human_turn(selected_square, player_clicks, valid_moves, gs, made_move):
         selected_square = (row, col)
         player_clicks.append(selected_square)
     if len(player_clicks) == 2:
-        move = ChessEngine.Move(player_clicks[0], player_clicks[1], gs.board)
+        move = engine.Move(player_clicks[0], player_clicks[1], gs.board)
         for i in range(len(valid_moves)):
             if move == valid_moves[i]:
                 gs.make_move(valid_moves[i])
