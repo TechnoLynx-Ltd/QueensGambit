@@ -33,7 +33,7 @@ let image_map =
 
 let images = {};
 
-let canvas, context;
+let canvas, context, promotion_choice;
 let square_width, square_height;
 let selected_square = null;
 let player_clicks = [];
@@ -45,12 +45,16 @@ let game_state = new Game_state();
 let game_over = false;
 let made_move = false;
 let ai_type = "";
+let promotion_chosen = true;
+let promotion_piece = "Q";
+let promotion_options = ["Q","B","R","N"];
 
 export function init()
 {
     load_model();
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
+    promotion_choice = document.getElementById("promotion_choice");
     square_width = canvas.width / 8;
     square_height = canvas.height / 8;
     canvas.addEventListener("click", board_click);
@@ -65,6 +69,8 @@ export function init()
     draw_board();
     display_ai();
     draw_message("Please, choose a type for the AI model");
+    draw_choice();
+    hide_choice();
     valid_moves = game_state.get_valid_moves();
 }
 
@@ -155,6 +161,54 @@ function draw_pieces()
             }
         }
     }
+}
+
+function draw_choice()
+{
+    for (let i = 0; i < 4; ++i)
+        {
+            let piece = 'w' + promotion_options[i];
+            let piece_image = images[piece];
+
+            let elem = document.createElement("img");
+            elem.setAttribute("src", piece_image.src);
+            elem.setAttribute("id",piece[1]);
+            elem.addEventListener("click", promotion_click)
+            promotion_choice.appendChild(elem);
+        }   
+}
+
+function hide_choice()
+{
+    promotion_choice.style.display = "none";
+}
+
+function display_choice()
+{
+    draw_message("Choose the piece to promote the pawn to");
+    promotion_choice.style.display = "block";
+}
+
+async function promotion_click(e)
+{
+    promotion_chosen = true;
+    promotion_piece = e.target.id;
+    let move = new Move(player_clicks[0], player_clicks[1], game_state.board, false, false, promotion_piece);
+    for (const valid_move of valid_moves)
+        {
+            if (move.equals(valid_move))
+            {
+                game_state.make_move(valid_move);
+                made_move = true;
+                selected_square = null;
+                player_clicks = [];
+            }
+        }
+    hide_choice();
+    refresh_state();
+    await delay(500);
+    play_ai_turn();
+    refresh_state();
 }
 
 function highlight_square()
@@ -305,19 +359,24 @@ function play_human_turn()
         {
             if (move.equals(valid_move))
             {
-                game_state.make_move(valid_move);
-                made_move = true;
-                selected_square = null;
-                player_clicks = [];
+                if (valid_move.promotion_move){
+                    display_choice();
+                    promotion_chosen = false;
+                } else {
+                    game_state.make_move(valid_move);
+                    made_move = true;
+                    selected_square = null;
+                    player_clicks = [];
+                }
             }
         }
 
-        if (!made_move)
+        if (!made_move && promotion_chosen)
         {
             player_clicks = [ selected_square ];
-        } else {
-        }
+        } 
     }
+    console.log(player_clicks);
 }
 
 function delay(milliseconds){
