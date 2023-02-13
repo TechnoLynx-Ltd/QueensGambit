@@ -13,8 +13,10 @@ class GameState:
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
-
         ]
+
+        self.position_dict = {'wP': 0, 'wR': 1, 'wN': 2, 'wB': 3, 'wQ': 4, 'wK': 5,
+                              'bP': 6, 'bR': 7, 'bN': 8, 'bB': 9, 'bQ': 10, 'bK': 11}
 
         self.white_to_move = True
         self.move_log = []
@@ -36,6 +38,24 @@ class GameState:
             'Q': self.get_queen_moves,
             'K': self.get_king_moves
         }
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return str(self.board)
+
+    def get_position(self):
+        """
+        Parse self.board into ndarray of size (8, 8, 12)
+        :return position: np.ndarray
+        """
+        nested_list_position = [[[0 for k in range(12)] for j in range(8)] for i in range(8)]  # numpy alternative
+        for i, line in enumerate(self.board):
+            for j, pos in enumerate(line):
+                if pos != "--":
+                    nested_list_position[i][j][self.position_dict[pos]] = 1
+        return nested_list_position
 
     def update_castle_rights(self, move):
         if self.white_to_move:
@@ -65,8 +85,8 @@ class GameState:
                 elif move.end_col == 7:
                     self.cur_castle_rights.wks = False
 
-
     def make_move(self, move):
+        # TODO - AttributeError: 'NoneType' object has no attribute 'start_row'
         self.board[move.start_row][move.start_col] = "--"
 
         if move.promotion_move:
@@ -77,19 +97,19 @@ class GameState:
         elif move.en_passant_move:
             self.board[move.end_row][move.end_col] = move.piece_moved
             if self.white_to_move:
-                self.board[move.end_row+1][move.end_col] = "--"
+                self.board[move.end_row + 1][move.end_col] = "--"
             else:
-                self.board[move.end_row-1][move.end_col] = "--"
+                self.board[move.end_row - 1][move.end_col] = "--"
         elif move.castle_move:
             self.board[move.end_row][move.end_col] = move.piece_moved
             if move.end_col == 2:
-                self.board[move.end_row][move.end_col+1] = self.board[move.end_row][move.end_col-2]
-                self.board[move.end_row][move.end_col-2] = "--"
+                self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 2]
+                self.board[move.end_row][move.end_col - 2] = "--"
 
                 self.board[move.end_row][move.end_col - 2] = "--"
             else:
-                self.board[move.end_row][move.end_col-1] = self.board[move.end_row][move.end_col+1]
-                self.board[move.end_row][move.end_col+1] = "--"
+                self.board[move.end_row][move.end_col - 1] = self.board[move.end_row][move.end_col + 1]
+                self.board[move.end_row][move.end_col + 1] = "--"
         else:
             self.board[move.end_row][move.end_col] = move.piece_moved
 
@@ -108,9 +128,9 @@ class GameState:
 
         # En passant location update
         if move.piece_moved == "wP" and move.end_row == 4:
-            self.en_passant_loc = (move.end_row+1, move.end_col)
+            self.en_passant_loc = (move.end_row + 1, move.end_col)
         elif move.piece_moved == "bP" and move.end_row == 3:
-            self.en_passant_loc = (move.end_row-1, move.end_col)
+            self.en_passant_loc = (move.end_row - 1, move.end_col)
         else:
             self.en_passant_loc = ()
 
@@ -136,10 +156,12 @@ class GameState:
                 self.board[last_move.end_row][last_move.end_col] = "--"
                 self.board[last_move.start_row][last_move.start_col] = last_move.piece_moved
                 if last_move.end_col == 2:
-                    self.board[last_move.end_row][last_move.end_col - 2] = self.board[last_move.end_row][last_move.end_col + 1]
+                    self.board[last_move.end_row][last_move.end_col - 2] = self.board[last_move.end_row][
+                        last_move.end_col + 1]
                     self.board[last_move.end_row][last_move.end_col + 1] = "--"
                 else:
-                    self.board[last_move.end_row][last_move.end_col + 1] = self.board[last_move.end_row][last_move.end_col - 1]
+                    self.board[last_move.end_row][last_move.end_col + 1] = self.board[last_move.end_row][
+                        last_move.end_col - 1]
                     self.board[last_move.end_row][last_move.end_col - 1] = "--"
             else:
                 self.board[last_move.end_row][last_move.end_col] = last_move.piece_captured
@@ -171,11 +193,10 @@ class GameState:
             if self.stalemate:
                 self.stalemate = False
 
-
-    """
-    All moves considering checks
-    """
     def get_valid_moves(self):
+        """
+        All moves considering checks
+        """
         moves = []
         self.in_check, self.pins, self.checks = self.get_pins_checks()
         if self.white_to_move:
@@ -218,10 +239,10 @@ class GameState:
 
         return moves
 
-    """
-    All moves without considering checks
-    """
     def get_all_possible_moves(self):
+        """
+        Get all moves without considering checks
+        """
         moves = []
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
@@ -264,7 +285,8 @@ class GameState:
                         type = end_piece[1]
                         if (0 <= j <= 3 and type == "R") or \
                                 (4 <= j <= 7 and type == "B") or \
-                                (i == 1 and type == "P" and ((ecolor == "w" and 6 <= j <= 7) or (ecolor == "b" and 4 <= j <= 5))) or \
+                                (i == 1 and type == "P" and (
+                                        (ecolor == "w" and 6 <= j <= 7) or (ecolor == "b" and 4 <= j <= 5))) or \
                                 (type == "Q") or (i == 1 and type == "K"):
                             if possible_pin == ():  # no piece blocking so check
                                 in_check = True
@@ -303,41 +325,41 @@ class GameState:
         pin_dir, pinned = self.get_pin_state(r, c)
 
         if self.white_to_move:
-            if self.board[r-1][c] == "--":
+            if self.board[r - 1][c] == "--":
                 if not pinned or pin_dir == (-1, 0):
-                    moves.append(Move((r, c), (r-1, c), self.board))
-                    if r == 6 and self.board[r-2][c] == "--":
-                        moves.append(Move((r, c),(r-2, c), self.board))
-            if c-1 >= 0:
+                    moves.append(Move((r, c), (r - 1, c), self.board))
+                    if r == 6 and self.board[r - 2][c] == "--":
+                        moves.append(Move((r, c), (r - 2, c), self.board))
+            if c - 1 >= 0:
                 if not pinned or pin_dir == (-1, -1):
-                    if self.board[r-1][c-1][0] == 'b':
-                        moves.append(Move((r, c), (r-1, c-1), self.board))
-                    elif self.en_passant_loc == (r-1, c-1):
-                        moves.append(Move((r, c), (r-1, c-1), self.board, en_passant_move=True))
-            if c+1 <= 7:
+                    if self.board[r - 1][c - 1][0] == 'b':
+                        moves.append(Move((r, c), (r - 1, c - 1), self.board))
+                    elif self.en_passant_loc == (r - 1, c - 1):
+                        moves.append(Move((r, c), (r - 1, c - 1), self.board, en_passant_move=True))
+            if c + 1 <= 7:
                 if not pinned or pin_dir == (-1, 1):
-                    if self.board[r-1][c+1][0] == 'b':
-                        moves.append(Move((r, c), (r-1, c+1), self.board))
-                    elif self.en_passant_loc == (r-1, c+1):
-                        moves.append(Move((r, c), (r-1, c+1), self.board, en_passant_move=True))
+                    if self.board[r - 1][c + 1][0] == 'b':
+                        moves.append(Move((r, c), (r - 1, c + 1), self.board))
+                    elif self.en_passant_loc == (r - 1, c + 1):
+                        moves.append(Move((r, c), (r - 1, c + 1), self.board, en_passant_move=True))
         else:
-            if self.board[r+1][c] == "--":
+            if self.board[r + 1][c] == "--":
                 if not pinned or pin_dir == (1, 0):
-                    moves.append(Move((r, c), (r+1, c), self.board))
-                    if r == 1 and self.board[r+2][c] == "--":
-                        moves.append(Move((r, c), (r+2, c), self.board))
-            if c-1 >= 0:
+                    moves.append(Move((r, c), (r + 1, c), self.board))
+                    if r == 1 and self.board[r + 2][c] == "--":
+                        moves.append(Move((r, c), (r + 2, c), self.board))
+            if c - 1 >= 0:
                 if not pinned or pin_dir == (1, 1):
-                    if self.board[r+1][c-1][0] == 'w':
-                        moves.append(Move((r, c), (r+1, c-1), self.board))
-                    elif self.en_passant_loc == (r+1, c-1):
-                        moves.append(Move((r, c), (r+1, c-1), self.board, en_passant_move=True))
-            if c+1 <= 7:
+                    if self.board[r + 1][c - 1][0] == 'w':
+                        moves.append(Move((r, c), (r + 1, c - 1), self.board))
+                    elif self.en_passant_loc == (r + 1, c - 1):
+                        moves.append(Move((r, c), (r + 1, c - 1), self.board, en_passant_move=True))
+            if c + 1 <= 7:
                 if not pinned or pin_dir == (1, -1):
-                    if self.board[r+1][c+1][0] == 'w':
-                        moves.append(Move((r, c), (r+1, c+1), self.board))
-                    elif self.en_passant_loc == (r+1, c+1):
-                        moves.append(Move((r, c), (r+1, c+1), self.board, en_passant_move=True))
+                    if self.board[r + 1][c + 1][0] == 'w':
+                        moves.append(Move((r, c), (r + 1, c + 1), self.board))
+                    elif self.en_passant_loc == (r + 1, c + 1):
+                        moves.append(Move((r, c), (r + 1, c + 1), self.board, en_passant_move=True))
 
     def get_rook_moves(self, r, c, moves):
         pin_dir, pinned = self.get_pin_state(r, c)
@@ -437,48 +459,50 @@ class GameState:
     def get_castle_moves(self, r, c, moves):
         if self.in_check:
             return
-        if (self.white_to_move and self.cur_castle_rights.wks) or (not self.white_to_move and self.cur_castle_rights.bks):
+        if (self.white_to_move and self.cur_castle_rights.wks) or (
+                not self.white_to_move and self.cur_castle_rights.bks):
             self.get_ks_castle_moves(r, c, moves)
-        if (self.white_to_move and self.cur_castle_rights.wqs) or (not self.white_to_move and self.cur_castle_rights.bqs):
+        if (self.white_to_move and self.cur_castle_rights.wqs) or (
+                not self.white_to_move and self.cur_castle_rights.bqs):
             self.get_qs_castle_moves(r, c, moves)
 
     def get_ks_castle_moves(self, r, c, moves):
-        if self.board[r][c+1] == "--" and self.board[r][c+2] == "--":
+        if self.board[r][c + 1] == "--" and self.board[r][c + 2] == "--":
             if self.white_to_move:
-                self.white_king_loc = (r, c+1)
+                self.white_king_loc = (r, c + 1)
                 will_be_in_check1, _, _ = self.get_pins_checks()
-                self.white_king_loc = (r, c+2)
+                self.white_king_loc = (r, c + 2)
                 will_be_in_check2, _, _ = self.get_pins_checks()
                 self.white_king_loc = (r, c)
                 if not will_be_in_check1 and not will_be_in_check2:
-                    moves.append(Move((r, c), (r, c+2), self.board, castle_move=True))
+                    moves.append(Move((r, c), (r, c + 2), self.board, castle_move=True))
             else:
-                self.black_king_loc = (r, c+1)
+                self.black_king_loc = (r, c + 1)
                 will_be_in_check1, _, _ = self.get_pins_checks()
-                self.black_king_loc = (r, c+2)
+                self.black_king_loc = (r, c + 2)
                 will_be_in_check2, _, _ = self.get_pins_checks()
                 self.black_king_loc = (r, c)
                 if not will_be_in_check1 and not will_be_in_check2:
-                    moves.append(Move((r, c), (r, c+2), self.board, castle_move=True))
+                    moves.append(Move((r, c), (r, c + 2), self.board, castle_move=True))
 
     def get_qs_castle_moves(self, r, c, moves):
-        if self.board[r][c-1] == "--" and self.board[r][c-2] == "--" and self.board[r][c-3] == "--":
+        if self.board[r][c - 1] == "--" and self.board[r][c - 2] == "--" and self.board[r][c - 3] == "--":
             if self.white_to_move:
-                self.white_king_loc = (r, c-1)
+                self.white_king_loc = (r, c - 1)
                 will_be_in_check1, _, _ = self.get_pins_checks()
-                self.white_king_loc = (r, c-2)
+                self.white_king_loc = (r, c - 2)
                 will_be_in_check2, _, _ = self.get_pins_checks()
                 self.white_king_loc = (r, c)
                 if not will_be_in_check1 and not will_be_in_check2:
-                    moves.append(Move((r, c), (r, c-2), self.board, castle_move=True))
+                    moves.append(Move((r, c), (r, c - 2), self.board, castle_move=True))
             else:
-                self.black_king_loc = (r, c-1)
+                self.black_king_loc = (r, c - 1)
                 will_be_in_check1, _, _ = self.get_pins_checks()
-                self.black_king_loc = (r, c-2)
+                self.black_king_loc = (r, c - 2)
                 will_be_in_check2, _, _ = self.get_pins_checks()
                 self.black_king_loc = (r, c)
                 if not will_be_in_check1 and not will_be_in_check2:
-                    moves.append(Move((r, c), (r, c-2), self.board, castle_move=True))
+                    moves.append(Move((r, c), (r, c - 2), self.board, castle_move=True))
 
 
 class CastleRights:

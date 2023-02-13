@@ -1,3 +1,7 @@
+"""
+Module of AI invoking methods
+"""
+
 import random
 
 piece_weights = {
@@ -10,13 +14,10 @@ piece_weights = {
     'K': 0
 }
 
-
-
-
-
 CHECKMATE = 1000
 STALEMATE = 0
 DEPTH = 2
+
 
 def find_rand_move(valid_moves):
     chosen_move = random.choice(valid_moves)
@@ -41,6 +42,14 @@ def find_greedy_move(gs, valid_moves):
             best_move = player_move
         gs.undo_move()
     return best_move
+
+
+def find_minmax_best_move(gs, valid_moves):
+    global next_move
+    next_move = None
+    find_minmax_move(gs, valid_moves, DEPTH, gs.white_to_move, -CHECKMATE, CHECKMATE)
+    return next_move
+
 
 def find_minmax_move(gs, valid_moves, depth, white_to_move, alpha, beta):
     global next_move
@@ -81,13 +90,51 @@ def find_minmax_move(gs, valid_moves, depth, white_to_move, alpha, beta):
         return min_score
 
 
-def find_minmax_best_move(gs, valid_moves):
-    global next_move
-    next_move = None
-    find_minmax_move(gs, valid_moves, DEPTH, gs.white_to_move, -CHECKMATE, CHECKMATE)
+def find_model_best_move(game_state, valid_moves, model):
+    """
+    Predict the score of all valid moves with a trained model and return the move with the highest score
+    :param game_state: GameState
+    :param valid_moves: list of Move
+    :param model: keras.model
+    :return: Move
+    """
+    max_score = 0
+    for move in valid_moves:
+
+        # Make a valid move
+        game_state.make_move(move)
+
+        # Expand current position to 4D b/c model input requirement
+        nested_list_pos = game_state.get_position()
+        nested_list_pos = [[[[nested_list_pos[i][j][k] for k in range(12)] for j in range(8)] for i in range(8)]
+                           for n in range(1)]  # numpy alternative
+
+        # Model predicts score (shape:(1,2)) of current position
+        score = model.predict(nested_list_pos)
+        assert score[0, 0] + score[0, 1] >= 0.99
+
+        if game_state.white_to_move:  # White moves
+            # White score
+            score = score[0, 0]
+        else:  # Black moves
+            # Black score
+            score = score[0, 1]
+
+        if score > max_score:
+            max_score = score
+            next_move = move
+
+        # Restore game_state into original position
+        game_state.undo_move()
+
     return next_move
 
+
 def score_material(board):
+    """
+    Positive score -> white
+    Negative score -> black
+    """
     score = 0
     for row in board:
         for square in row:
@@ -98,11 +145,12 @@ def score_material(board):
 
     return score
 
-"""
-Positive score -> white
-Negative score -> black
-"""
+
 def score_board(gs):
+    """
+    Positive score -> white
+    Negative score -> black
+    """
     if gs.checkmate:
         if gs.white_to_move:
             return -CHECKMATE
@@ -119,4 +167,3 @@ def score_board(gs):
             else:
                 score -= piece_weights[square[1]]
     return score
-
