@@ -1,34 +1,40 @@
 import tensorflow as tf
 
 from tensorflow.keras import Input, layers, Model
+from keras.layers import LeakyReLU, LayerNormalization
 
 
 def create_model():
   
     board_input = Input(
-        shape=(8, 8), name="board"
+        shape=(8, 8, 1), name="board"
     ) 
     white_move_input = Input(shape=1, name="white_move")
 
     board_features = layers.Conv2D(filters=32,
                             kernel_size=(3, 3),
-                            padding='same',
-                            activation='relu')(board_input)
+                            padding='same')(board_input)
+    
+    board_features = LeakyReLU()(board_features)
+    board_features = LayerNormalization()(board_features)
     
     board_features = layers.Conv2D(filters=32,
                             kernel_size=(5, 5),
                             strides=(1, 1),
-                            padding='valid',
-                            activation='relu')(board_features)
-    
+                            padding='valid')(board_features)
+    board_features = LeakyReLU()(board_features)
+    board_features = LayerNormalization()(board_features)
+
     board_features = layers.Flatten()(board_features)
 
     x = layers.concatenate([board_features, white_move_input])
-    x = layers.Dense(128, activation="relu")(x)
+    x = layers.Dense(128)(x)
+    x = LeakyReLU()(x)
+    x = LayerNormalization()(x)
 
     winner_pred = layers.Dense(3, name="winner", activation='softmax')(x)
     moves_pred = layers.Dense(1, name="moves_left", activation='relu')(x)
-
+    
     model = Model(
         inputs=[board_input, white_move_input],
         outputs=[winner_pred, moves_pred],
@@ -39,7 +45,7 @@ def create_model():
     model.compile(
         optimizer='adam',
         loss={
-            "winner": tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+            "winner": tf.keras.losses.CategoricalCrossentropy(from_logits=False),
             "moves_left": tf.keras.losses.MeanSquaredError(),
         }
     )
