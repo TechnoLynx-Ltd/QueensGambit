@@ -1,35 +1,13 @@
 import copy
-
+from random import choices, randint, random
+import numpy as np
 
 class GameState:
 
-    def __init__(self):
-        self.board = [
-            ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-            ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
-        ]
-
+    def __init__(self, randomize=False):
         self.position_dict = {'wP': 0, 'wR': 1, 'wN': 2, 'wB': 3, 'wQ': 4, 'wK': 5,
                               'bP': 6, 'bR': 7, 'bN': 8, 'bB': 9, 'bQ': 10, 'bK': 11}
-
-        self.white_to_move = True
         self.move_log = []
-        self.white_king_loc = (7, 4)
-        self.black_king_loc = (0, 4)
-        self.en_passant_loc = ()
-        self.cur_castle_rights = CastleRights(True, True, True, True)
-        self.castle_rights_log = [copy.deepcopy(self.cur_castle_rights)]
-        self.in_check = False
-        self.pins = []
-        self.checks = []
-        self.checkmate = False
-        self.stalemate = False
         self.move_methods = {
             'P': self.get_pawn_moves,
             'R': self.get_rook_moves,
@@ -38,6 +16,131 @@ class GameState:
             'Q': self.get_queen_moves,
             'K': self.get_king_moves
         }
+
+        if not randomize:
+            self.board = [
+                ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
+                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+                ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+            ]
+            self.white_to_move = True
+            self.white_king_loc = (7, 4)
+            self.black_king_loc = (0, 4)
+            self.en_passant_loc = ()
+            self.in_check = False
+            self.pins = []
+            self.checks = []
+            self.cur_castle_rights = CastleRights(True, True, True, True)
+        else:
+            self.en_passant_loc = ()
+            self.cur_castle_rights = CastleRights(False, False, False, False)
+            self.create_random_board()
+
+        self.checkmate = False
+        self.stalemate = False
+        self.castle_rights_log = [copy.deepcopy(self.cur_castle_rights)]
+
+
+    def create_random_board(self):
+        self.board = [
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"]
+            ]
+        
+        self.white_to_move = choices([True, False], [1, 1])[0]
+        self.white_king_loc = self.place_at_random("wK")
+        white_king_castle = (self.white_king_loc == (7, 4))
+
+        self.black_king_loc = self.place_at_random("bK")
+        black_king_castle = (self.black_king_loc == (0, 4))
+
+        #more pawns should be more probable (more close to the game start board)
+        #weights are corresponding to the pieces number
+        bp = choices(list(range(8,-1,-1)), list(range(8,-1,-1)))[0]
+        wp = choices(list(range(8,-1,-1)), list(range(8,-1,-1)))[0]
+        for _ in range(bp):
+            pos = self.place_at_random('bP', low_bound=1, up_bound=6)
+            if self.white_to_move and pos[0]==3 and len(self.en_passant_loc) == 0 and random() < 0.5:
+                self.en_passant_loc = (pos[0] - 1, pos[1])
+        
+        for _ in range(wp):
+            pos = self.place_at_random('wP', low_bound=1, up_bound=6)
+            if not self.white_to_move and pos[0]==4 and len(self.en_passant_loc) == 0 and random() < 0.5:
+                self.en_passant_loc = (pos[0] + 1, pos[1])
+
+        #it's more probable that the player choose to promote to queen (so starting with this)
+        #it is also hard to promote to some piece so the probability of having more than one queen should be low
+        bq = choices(list(range(10-bp)), [2**(9-bp)]+list(map(lambda x: 2**x, list(range(9-bp, 0, -1)))))[0]
+        wq = choices(list(range(10-wp)), [2**(9-wp)]+list(map(lambda x: 2**x, list(range(9-wp, 0, -1)))))[0]
+        for _ in range(bq):
+            self.place_at_random('bQ')
+        
+        for _ in range(wq):
+            self.place_at_random('wQ')
+
+        #the next powerful piece is the rook
+        br = choices(list(range(11-bp-bq+1)), [2**(10-bp-bq+1)]*2+list(map(lambda x: 2**x, list(range(10-bp-bq+1, 1, -1)))))[0]
+        wr = choices(list(range(11-wp-wq+1)), [2**(10-wp-wq+1)]*2+list(map(lambda x: 2**x, list(range(10-wp-wq+1, 1, -1)))))[0]
+
+        for _ in range(br):
+            pos = self.place_at_random('bR')
+            if pos == (0,0) and black_king_castle and random() < 0.5:
+                self.cur_castle_rights.bqs = True
+            if pos == (0,7) and black_king_castle and random() < 0.5:
+                self.cur_castle_rights.bks = True
+        
+        for _ in range(wr):
+            pos = self.place_at_random('wR')
+            if pos == (7,0) and white_king_castle and random() < 0.5:
+                self.cur_castle_rights.wqs = True
+            if pos == (7,7) and white_king_castle and random() < 0.5:
+                self.cur_castle_rights.wks = True
+        #the next one - bishop
+        bb = choices(list(range(11-bp-bq-br+3)), [2**(10-bp-bq-br+3)]*2+list(map(lambda x: 2**x, list(range(10-bp-bq-br+3, 1, -1)))))[0]
+        wb = choices(list(range(11-wp-wq-wr+3)), [2**(10-wp-wq-wr+3)]*2+list(map(lambda x: 2**x, list(range(10-wp-wq-wr+3, 1, -1)))))[0]
+        for _ in range(bb):
+            self.place_at_random('bB')
+        
+        for _ in range(wb):
+            self.place_at_random('wB')
+
+        #the last one - knight
+        bn = choices(list(range(11-bp-bq-br-bb+5)), [2**(10-bp-bq-br-bb+5)]*3+list(map(lambda x: 2**x, list(range(10-bp-bq-br-bb+5, 2, -1)))))[0]
+        wn = choices(list(range(11-wp-wq-wr-wb+5)), [2**(10-wp-wq-wr-wb+5)]*3+list(map(lambda x: 2**x, list(range(10-wp-wq-wr-wb+5, 2, -1)))))[0]
+        for _ in range(bn):
+            self.place_at_random('bN')
+        
+        for _ in range(wn):
+            self.place_at_random('wN')
+        
+        self.in_check, self.pins, self.checks = self.get_pins_checks()
+
+    def place_at_random(self, piece, low_bound=0, up_bound=7):
+        position = (randint(low_bound,up_bound), randint(low_bound,up_bound))
+        while self.board[position[0]][position[1]]!="--":
+            position = (randint(low_bound,up_bound), randint(low_bound,up_bound))
+        self.board[position[0]][position[1]]=piece
+        return position
+    
+    def parse_board(self):
+        piece_positions = np.zeros((8, 8, 12), dtype=np.int8)
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] != "--":
+                    piece_positions[i, j, self.position_dict[self.board[i][j]]] = 1
+
+        return piece_positions
 
     def __repr__(self):
         return str(self)
@@ -91,9 +194,9 @@ class GameState:
 
         if move.promotion_move:
             if self.white_to_move:
-                self.board[move.end_row][move.end_col] = "wQ"
+                self.board[move.end_row][move.end_col] = "w"+move.promote_to
             else:
-                self.board[move.end_row][move.end_col] = "bQ"
+                self.board[move.end_row][move.end_col] = "b" + move.promote_to
         elif move.en_passant_move:
             self.board[move.end_row][move.end_col] = move.piece_moved
             if self.white_to_move:
@@ -345,18 +448,30 @@ class GameState:
         else:
             if self.board[r + 1][c] == "--":
                 if not pinned or pin_dir == (1, 0):
+                    move = Move((r, c), (r + 1, c), self.board)
+                    if(move.promotion_move):
+                        for promoting_to in ['N', 'R', 'B']:
+                            moves.append(Move((r, c), (r + 1, c), self.board, promote_to=promoting_to))
                     moves.append(Move((r, c), (r + 1, c), self.board))
                     if r == 1 and self.board[r + 2][c] == "--":
                         moves.append(Move((r, c), (r + 2, c), self.board))
             if c - 1 >= 0:
                 if not pinned or pin_dir == (1, 1):
                     if self.board[r + 1][c - 1][0] == 'w':
+                        move = Move((r, c), (r + 1, c - 1), self.board)
+                        if(move.promotion_move):
+                            for promoting_to in ['N', 'R', 'B']:
+                                moves.append(Move((r, c), (r + 1, c - 1), self.board, promote_to=promoting_to))
                         moves.append(Move((r, c), (r + 1, c - 1), self.board))
                     elif self.en_passant_loc == (r + 1, c - 1):
                         moves.append(Move((r, c), (r + 1, c - 1), self.board, en_passant_move=True))
             if c + 1 <= 7:
                 if not pinned or pin_dir == (1, -1):
                     if self.board[r + 1][c + 1][0] == 'w':
+                        move = Move((r, c), (r + 1, c + 1), self.board)
+                        if(move.promotion_move):
+                            for promoting_to in ['N', 'R', 'B']:
+                                moves.append(Move((r, c), (r + 1, c + 1), self.board, promote_to=promoting_to))
                         moves.append(Move((r, c), (r + 1, c + 1), self.board))
                     elif self.en_passant_loc == (r + 1, c + 1):
                         moves.append(Move((r, c), (r + 1, c + 1), self.board, en_passant_move=True))
@@ -508,8 +623,8 @@ class GameState:
 class CastleRights:
     def __init__(self, wks, bks, wqs, bqs):
         self.wks = wks
-        self.bks = bks,
-        self.wqs = wqs,
+        self.bks = bks
+        self.wqs = wqs
         self.bqs = bqs
 
 
@@ -519,7 +634,7 @@ class Move:
     file_to_col = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     col_to_file = {v: k for k, v in file_to_col.items()}
 
-    def __init__(self, start, end, board, en_passant_move=False, castle_move=False):
+    def __init__(self, start, end, board, en_passant_move=False, castle_move=False, promote_to = "Q"):
         self.start_row = start[0]
         self.start_col = start[1]
         self.end_row = end[0]
@@ -534,6 +649,7 @@ class Move:
             self.promotion_move = True
         self.en_passant_move = en_passant_move
         self.castle_move = castle_move
+        self.promote_to = promote_to
 
     def get_chess_notation(self):
         return self.get_rank_file(self.start_row, self.start_col) + self.get_rank_file(self.end_row, self.end_col)
@@ -543,5 +659,5 @@ class Move:
 
     def __eq__(self, other):
         if isinstance(other, Move):
-            return self.move_id == other.move_id
+            return self.move_id == other.move_id and self.promote_to == other.promote_to
         return False

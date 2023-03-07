@@ -3,6 +3,7 @@ Module of AI invoking methods
 """
 
 import random
+import numpy as np
 
 piece_weights = {
     '-': 0,
@@ -46,7 +47,7 @@ def find_greedy_move(gs, valid_moves):
 
 def find_minmax_best_move(gs, valid_moves):
     global next_move
-    next_move = None
+    next_move = valid_moves[0]
     find_minmax_move(gs, valid_moves, DEPTH, gs.white_to_move, -CHECKMATE, CHECKMATE)
     return next_move
 
@@ -129,6 +130,45 @@ def find_model_best_move(game_state, valid_moves, model):
 
     return next_move
 
+def find_model_best_move_without_scoring(game_state, valid_moves, model):
+    min_loosing = (0,0,float("inf"))
+    cur_left_to_win = float("inf")
+    for move in valid_moves:
+
+        # Make a valid move
+        game_state.make_move(move)
+
+        # Expand current position to 4D b/c model input requirement
+        nested_list_pos = game_state.get_position()
+        nested_list_pos = [[[[nested_list_pos[i][j][k] for k in range(12)] for j in range(8)] for i in range(8)]
+                           for n in range(1)]  # numpy alternative
+
+        # Model predicts score (shape:(1,2)) of current position
+        # res = np.asarray(nested_list_pos).astype(np.uint8)
+        prediction = model.predict([np.asarray(nested_list_pos).astype(np.uint8), np.asarray([game_state.white_to_move]).astype(np.uint8)])
+        move_result = prediction[0][0]
+        left_to_win = prediction[1][0]
+        if not game_state.white_to_move:
+            move_result = tuple(move_result[::-1])
+        
+        if min_loosing[2] - move_result[2] > 0.05:
+            min_loosing = move_result
+            next_move = move
+            cur_left_to_win = left_to_win
+        elif min_loosing[2] - move_result[2] > -0.05:
+            if min_loosing[2] - move_result[2] > 0.05:
+                min_loosing = move_result
+                next_move = move
+                cur_left_to_win = left_to_win
+            elif min_loosing[2] - move_result[2] > -0.05 and left_to_win < cur_left_to_win:
+                min_loosing = move_result
+                next_move = move
+                cur_left_to_win = left_to_win
+
+        # Restore game_state into original position
+        game_state.undo_move()
+    print(min_loosing, cur_left_to_win)
+    return next_move
 
 def score_material(board):
     """

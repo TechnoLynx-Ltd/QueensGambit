@@ -78,60 +78,22 @@ def parse_result(game):
 
     return result_info
 
-
-def approx_pos_score(result, move_idx, move_count):
-    """
-    Approximate a board score based on game progress and final result
-    :param result:
-    :param move_idx:
-    :param move_count:
-    :return: pos_score: np.ndarry -
-    """
-    assert result in ['1-0', '0-1', '1/2-1/2']
-    assert move_idx <= move_count
-
-    # Result is a binary exclusive class
-    pos_score = np.zeros((2,), dtype=float)
-
-    # Weight is in exponential relation with game's move progress: float from 0 to 1
-    # Factor can go up to 1000 or even more, check link:
-    # https://www.wolframalpha.com/input/?i=%281000%5Ex+-+1%29+%2F+%281000+-+1%29+from+0+to+1
-    factor = 10
-    weight = (factor ** (move_idx / move_count) - 1) / (factor - 1)
-    assert 0 <= weight <= 1
-
-    if result == '1-0':
-        # White wins
-        pos_score[0] = .5 + (.5 * weight)
-    elif result == '0-1':
-        # Black wins
-        pos_score[0] = .5 - (.5 * weight)
-    else:
-        # Draw
-        pos_score[0] = .5
-
-    # Black's approximate score
-    pos_score[1] = 1 - pos_score[0]
-
-    return pos_score
-
-
 def parse_board(board):
     """
-    Parse Board object into ndarray of size (8, 8, 12)
+    Parse Board object into ndarray of size (8, 8)
     :param board: chess.Board
     :return piece_positions: np.ndarray
     """
     assert type(board) is chess.Board
 
-    piece_positions = np.zeros((8, 8, 12), dtype=np.int8)
+    piece_positions = np.zeros((8, 8), dtype=np.int8)
 
     lines = str(board).split("\n")
     for i, line in enumerate(lines):
         positions = line.split(" ")
         for j, pos in enumerate(positions):
             if pos != ".":
-                piece_positions[i, j, position_dict[pos]] = 1
+                piece_positions[i, j] = position_dict[pos]
 
     return piece_positions
 
@@ -147,8 +109,10 @@ def parse_pgn(filename, debug=False):
 
         # Dataset is built by appending to lists b/c it is faster than appending to np.ndarrays
         positions = []
-        scores = []
         moves = []
+        results = []
+        white_move = []
+
 
         if debug:
             limit = 10
@@ -178,6 +142,7 @@ def parse_pgn(filename, debug=False):
                 continue
 
             # Parse moves
+            cur_white_move = True
             for move_idx, move in enumerate(game.mainline_moves()):
                 board.push(move)
                 piece_positions = parse_board(board)
@@ -187,28 +152,33 @@ def parse_pgn(filename, debug=False):
 
                 # Save positions
                 positions.append(piece_positions)
+                if result == "1-0":
+                    results.append([1,0,0])
+                elif result == "0-1":
+                    results.append([0,0,1])
+                else:
+                    results.append([0,1,0])
+                white_move.append(cur_white_move)
+                cur_white_move = not cur_white_move
 
-                # Approximate and save current position's score
-                scores.append(approx_pos_score(result, move_idx, move_count))
 
                 # Save no. moves left until end of game
                 moves.append(moves_left)
 
     # Convert extracted data into ndarray
     positions = np.array(positions)
-    scores = np.array(scores)
     moves = np.array(moves).astype(np.uint8)
-
-    assert 0 <= scores.min()
-    assert scores.max() <= 1
+    results = np.array(results)
+    white_move = np.array(white_move).astype(np.int8)
 
     # Info
     print(f'File {filename} parsed')
-    print(f'Positions: {positions.shape}')
-    print(f'Scores: {scores.shape}')
     print(f'Moves: {moves.shape}')
+    print(f'Positions: {positions.shape}')
+    print(f'Result: {results.shape}')
+    print(f'White moves: {white_move.shape}')
 
-    return positions, scores, moves
+    return positions, moves, results, white_move
 
 
 def load_data_from_pgn(filenames, save_to_file=False, debug=False):
@@ -225,29 +195,33 @@ def load_data_from_pgn(filenames, save_to_file=False, debug=False):
         print(f'Argument filenames is not iterable')
 
     # Datasets accumulator
-    X_position = np.empty((0, 8, 8, 12))
-    y_score = np.empty((0, 2))
+    X_position = np.empty((0, 8, 8))
     y_moves = np.empty((0,))
+    y_result = np.empty((0,3))
+    X_white_move = np.empty((0,))
 
     for filename in filenames:
         # Parse .pgn file
-        positions, scores, moves = parse_pgn(filename, debug)
+        positions, moves, result, white_move = parse_pgn(filename, debug)
 
         # Build dataset
         X_position = np.append(X_position, positions, axis=0)
-        y_score = np.append(y_score, scores, axis=0)
         y_moves = np.append(y_moves, moves, axis=0)
+        y_result = np.append(y_result, result, axis=0)
+        X_white_move = np.append(X_white_move, white_move, axis=0)
 
     if save_to_file:
         print("Saving dataset to file")
         with open("../../data/npy/X_positions.npy", 'wb') as X_pos_file:
             np.save(X_pos_file, X_position)
-        with open("../../data/npy/y_scores.npy", "wb") as y_scr_file:
-            np.save(y_scr_file, y_score)
+        with open("../../data/npy/X_white_move.npy", "wb") as y_res_file:
+            np.save(y_res_file, X_white_move)
         with open("../../data/npy/y_moves.npy", "wb") as y_res_file:
             np.save(y_res_file, y_moves)
+        with open("../../data/npy/y_result.npy", "wb") as y_res_file:
+            np.save(y_res_file, y_result)
 
-    return X_position, y_score, y_moves
+    return X_position, X_white_move, y_moves, y_result
 
 
 if __name__ == '__main__':
@@ -262,5 +236,6 @@ if __name__ == '__main__':
 
     print('Open and check .npy files')
     print(np.load("../../data/npy/X_positions.npy").shape)
+    print(np.load("../../data/npy/X_white_move.npy").shape)
     print(np.load("../../data/npy/y_moves.npy").shape)
-    print(np.load("../../data/npy/y_scores.npy").shape)
+    print(np.load("../../data/npy/y_result.npy").shape)
