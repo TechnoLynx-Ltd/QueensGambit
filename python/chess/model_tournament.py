@@ -4,110 +4,79 @@ import numpy as np
 from tensorflow import keras
 import random
 
+
+
 class ModelTournament:
-
-    def __init__ (self, find_white_move, find_black_move, num_games = 1000, black_model_name = None, white_model_name = None):
-        self.find_white_move = find_white_move
-        self.find_black_move = find_black_move
+    def __init__ (self, name_find_move:dict, num_games=100):
+        self.name_find_move = name_find_move
+        self.game_results = {name: [0,0,0] for name in name_find_move}
         self.num_games = num_games
-        self.white_model_name = white_model_name
-        self.black_model_name = black_model_name
-        self.white_wins = 0
-        self.black_wins = 0
-        self.stalemates = 0
-    
-    def generate_gs(self):
-        for _ in range(self.num_games):
-            gs = GameState(randomize=True)
-            yield gs
-
 
     def play_tournament(self):
-        game_states = self.generate_gs()
-        positions = []
-        moves = []
-        results = []
-        white_move = []
-
-        for gs in game_states: 
-            move_count = 0
-            this_game_positions = []
-            this_game_white_move = []
-            valid_moves = gs.get_valid_moves()
-            random.shuffle(valid_moves)
-            while not gs.checkmate and not gs.stalemate and move_count<300:
-                # print(gs)
-                this_game_positions.append(gs.parse_board())
-                this_game_white_move.append(gs.white_to_move)
-                move_count += 1
-                if gs.white_to_move:
-                    chosen_move = self.find_white_move(gs, valid_moves)
-                else:
-                    chosen_move = self.find_black_move(gs, valid_moves)
-                gs.make_move(chosen_move)
+        
+        model_names = list(self.name_find_move.keys())
+        for model in model_names:
+            #curent model always plays as white and enemy is black
+            enemies = [model_name for model_name in model_names if model_name!=model]
+            for enemy in enemies:
+                gs = GameState()
+                move_count = 0
                 valid_moves = gs.get_valid_moves()
                 random.shuffle(valid_moves)
+                played_games = 0
+                while played_games < 1:
+                    while not gs.checkmate and not gs.stalemate and move_count<500:
+                        print(gs)
+                        move_count += 1
+                        if gs.white_to_move:
+                            chosen_move = self.name_find_move[model](gs, valid_moves)
+                        else:
+                            chosen_move = self.name_find_move[enemy](gs, valid_moves)
+                        gs.make_move(chosen_move)
+                        valid_moves = gs.get_valid_moves()
+                        random.shuffle(valid_moves)
 
-            this_game_positions.append(gs.parse_board())
-            this_game_white_move.append(gs.white_to_move)
-            if move_count >= 300:
-                continue
-
-            if gs.checkmate:
-                if gs.white_to_move:
-                    game_result = [0,0,1]
-                    self.black_wins += 1
-                else:
-                    game_result = [1,0,0]
-                    self.white_wins += 1
-            else:
-                game_result = [0,1,0]
-                self.stalemates += 1
-
-            for i in range(move_count, -1, -1):
-                    moves.append(i)
-                    results.append(game_result)
-            positions += this_game_positions
-            white_move += this_game_white_move
-        positions = np.array(positions)
-        moves = np.array(moves).astype(np.uint8)
-        results = np.array(results)
-        white_move = np.array(white_move).astype(np.uint8)
-        print(f'Moves: {moves.shape}')
-        print(f'Positions: {positions.shape}')
-        print(f'Result: {results.shape}')
-        print(f'White moves: {white_move.shape}')
-        return positions, moves, results, white_move
-
-    def save_res(self, X_position, y_moves, y_result, X_white_move, folder="data"):
-        
-        print("Saving dataset to file")
-        with open(f"../../{folder}/npy/X_positions.npy", 'ab') as X_pos_file:
-            np.save(X_pos_file, X_position)
-        with open(f"../../{folder}/npy/X_white_move.npy", "ab") as y_res_file:
-            np.save(y_res_file, X_white_move)
-        with open(f"../../{folder}/npy/y_moves.npy", "ab") as y_res_file:
-            np.save(y_res_file, y_moves)
-        with open(f"../../{folder}/npy/y_result.npy", "ab") as y_res_file:
-            np.save(y_res_file, y_result)
-        return X_position, X_white_move, y_moves, y_result
-
-    def record_stats(self, loggs_file='./tournaments_results.txt'):
-        with open(loggs_file, 'a') as stats_file:
-            stats_file.write(f"{self.white_model_name}: {self.white_wins}, {self.black_model_name}: {self.black_wins}, stalemates: {self.stalemates}\n")
+                    if move_count >= 500:
+                        game_result = [0,1,0]
+                        self.game_results[model] =[self.game_results[model][i]+game_result[i] for i in range(3)]
+                        self.game_results[enemy] =[self.game_results[enemy][i]+game_result[::-1][i] for i in range(3)]
 
 
+                    played_games += 1
+                    if gs.checkmate:
+                        if gs.white_to_move:
+                            game_result = [0,0,1]
+                            self.game_results[model] =[self.game_results[model][i]+game_result[i] for i in range(3)]
+                            self.game_results[enemy] =[self.game_results[enemy][i]+game_result[::-1][i] for i in range(3)]
+                        else:
+                            game_result = [1,0,0]
+                            self.game_results[model] =[self.game_results[model][i]+game_result[i] for i in range(3)]
+                            self.game_results[enemy] =[self.game_results[enemy][i]+game_result[::-1][i] for i in range(3)]
+                            
+                    else:
+                        game_result = [0,1,0]
+                        self.game_results[model] =[self.game_results[model][i]+game_result[i] for i in range(3)]
+                        self.game_results[enemy] =[self.game_results[enemy][i]+game_result[::-1][i] for i in range(3)]
+
+        return self.game_results
+    
+    def rank_models(self):
+        model_names = list(self.name_find_move.keys())
+        model_names.sort(key=lambda x: self.game_results[x], reverse=True)
+        print("Rating from best to worst:")
+        for model_name in model_names:
+            print(f'{model_name} with the result {self.game_results[model_name]}')
+        return model_names
 
 
+#For model ranking
 if __name__ == "__main__":
     model = keras.models.load_model('../model')
     def find_model_move(gs, valid_moves):
         return ai.find_model_best_move_without_scoring(gs, valid_moves, model)
-    tournament = ModelTournament(find_model_move, ai.find_minmax_best_move, num_games=7, white_model_name="ANN", black_model_name="MinMax depth 2")
-    positions, moves, results, white_move = tournament.play_tournament()
-    tournament.record_stats()
-    tournament.save_res(positions, moves, results, white_move, "simulated_data_1")
-    # print(positions)
-    print(moves)
-    print(results)
-    print(white_move)
+    def find_minmax_best_move_1(gs, valid_moves):
+        return ai.find_minmax_best_move(gs, valid_moves, depth=1)
+    tournament = ModelTournament({"ANN": find_model_move, "MinMax depth 1":find_minmax_best_move_1, "MinMax depth 2":ai.find_minmax_best_move})
+    result = tournament.play_tournament()
+    tournament.rank_models()
+

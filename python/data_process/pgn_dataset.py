@@ -80,20 +80,20 @@ def parse_result(game):
 
 def parse_board(board):
     """
-    Parse Board object into ndarray of size (8, 8)
+    Parse Board object into ndarray of size (8, 8, 12)
     :param board: chess.Board
     :return piece_positions: np.ndarray
     """
     assert type(board) is chess.Board
 
-    piece_positions = np.zeros((8, 8), dtype=np.int8)
+    piece_positions = np.zeros((8, 8, 12), dtype=np.int8)
 
     lines = str(board).split("\n")
     for i, line in enumerate(lines):
         positions = line.split(" ")
         for j, pos in enumerate(positions):
             if pos != ".":
-                piece_positions[i, j] = position_dict[pos]
+                piece_positions[i, j] = position_dict[pos]+1
 
     return piece_positions
 
@@ -195,7 +195,7 @@ def load_data_from_pgn(filenames, save_to_file=False, debug=False):
         print(f'Argument filenames is not iterable')
 
     # Datasets accumulator
-    X_position = np.empty((0, 8, 8))
+    X_position = np.empty((0, 8, 8, 12))
     y_moves = np.empty((0,))
     y_result = np.empty((0,3))
     X_white_move = np.empty((0,))

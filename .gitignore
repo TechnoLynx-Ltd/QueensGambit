@@ -10,7 +10,11 @@ __pycache__/
 
 data/
 
+data_simulated/
+
 saved_model_js/
+saved_model_js_1/
+data_unused/
 
 venv/
 

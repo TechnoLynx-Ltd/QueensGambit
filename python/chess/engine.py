@@ -157,7 +157,7 @@ class GameState:
         for i, line in enumerate(self.board):
             for j, pos in enumerate(line):
                 if pos != "--":
-                    nested_list_position[i][j][self.position_dict[pos]] = 1
+                    nested_list_position[i][j] = self.position_dict[pos]+1
         return nested_list_position
 
     def update_castle_rights(self, move):

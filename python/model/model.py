@@ -7,7 +7,7 @@ from keras.layers import LeakyReLU, LayerNormalization
 def create_model():
   
     board_input = Input(
-        shape=(8, 8, 1), name="board"
+        shape=(8, 8, 12), name="board"
     ) 
     white_move_input = Input(shape=1, name="white_move")
 
