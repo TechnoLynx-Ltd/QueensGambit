@@ -71,7 +71,7 @@ class ModelTournament:
 
 #For model ranking
 if __name__ == "__main__":
-    model = keras.models.load_model('../model')
+    model = keras.models.load_model('../model/baseline_model')
     def find_model_move(gs, valid_moves):
         return ai.find_model_best_move_without_scoring(gs, valid_moves, model)
     def find_minmax_best_move_1(gs, valid_moves):

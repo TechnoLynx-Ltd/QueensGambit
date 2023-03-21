@@ -4,11 +4,19 @@ import tensorflowjs as tfjs
 from model import create_model
 from tensorflow.keras.callbacks import TensorBoard
 import tensorflow as tf
+import os
+import shutil
+from tqdm import tqdm
 
 def train(model, X_pos_train, X_pos_test, X_white_move_train, X_white_move_test,
-                y_moves_train, y_moves_test, y_result_train, y_result_test, tfjs_target_dir):
-
-    tensorboard_callback = TensorBoard(log_dir='./logs_balanced_data', histogram_freq=1)
+                y_moves_train, y_moves_test, y_result_train, y_result_test, tfjs_target_dir,
+                tensorboard_dir = "./logs"):
+    try:
+        os.mkdir(tensorboard_dir)
+    except OSError as error:
+        shutil.rmtree(tensorboard_dir)
+        os.mkdir(tensorboard_dir)
+    tensorboard_callback = TensorBoard(log_dir=tensorboard_dir, histogram_freq=1)
     with tf.device('/gpu:0'):
         history = model.fit(
             {"board": X_pos_train, "white_move": X_white_move_train},
@@ -49,10 +57,11 @@ if __name__ == '__main__':
     # print(y_scr_test.shape)
 
     tfjs_target_dir = "../../saved_model_js_1"
+    for i in tqdm(range(1, 21)):
+        model = create_model(num_convolutions=i)
 
-    model = create_model()
+        model = train(model, X_pos_train, X_pos_test, X_white_move_train, X_white_move_test,
+                    y_moves_train, y_moves_test, y_result_train, y_result_test, tfjs_target_dir,
+                    tensorboard_dir="./logs_"+str(i)+"_convolutions")
 
-    model = train(model, X_pos_train, X_pos_test, X_white_move_train, X_white_move_test,
-                y_moves_train, y_moves_test, y_result_train, y_result_test, tfjs_target_dir)
-
-    model.save('baseline_model')
+        model.save(f'model_convolutions_{i}')
