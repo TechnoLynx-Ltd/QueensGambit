@@ -67,8 +67,8 @@ class GameState:
 
         #more pawns should be more probable (more close to the game start board)
         #weights are corresponding to the pieces number
-        bp = choices(list(range(8,-1,-1)), list(range(8,-1,-1)))[0]
-        wp = choices(list(range(8,-1,-1)), list(range(8,-1,-1)))[0]
+        bp = choices(list(range(8,-1,-1)), list(range(9,1,-1)))[0]
+        wp = choices(list(range(8,-1,-1)), list(range(9,1,-1)))[0]
         for _ in range(bp):
             pos = self.place_at_random('bP', low_bound=1, up_bound=6)
             if self.white_to_move and pos[0]==3 and len(self.en_passant_loc) == 0 and random() < 0.5:
@@ -81,17 +81,21 @@ class GameState:
 
         #it's more probable that the player choose to promote to queen (so starting with this)
         #it is also hard to promote to some piece so the probability of having more than one queen should be low
-        bq = choices(list(range(10-bp)), [2**(9-bp)]+list(map(lambda x: 2**x, list(range(9-bp, 0, -1)))))[0]
-        wq = choices(list(range(10-wp)), [2**(9-wp)]+list(map(lambda x: 2**x, list(range(9-wp, 0, -1)))))[0]
+        # bq = choices(list(range(10-bp)), [2**(9-bp)]+list(map(lambda x: 2**x, list(range(9-bp, 0, -1)))))[0]
+        # wq = choices(list(range(10-wp)), [2**(9-wp)]+list(map(lambda x: 2**x, list(range(9-wp, 0, -1)))))[0]
+        bq = choices(list(range(1, -1, -1)), [1,1])[0]
+        wq = choices(list(range(1, -1, -1)), [1,1])[0]
         for _ in range(bq):
             self.place_at_random('bQ')
         
         for _ in range(wq):
             self.place_at_random('wQ')
 
-        #the next powerful piece is the rook
-        br = choices(list(range(11-bp-bq+1)), [2**(10-bp-bq+1)]*2+list(map(lambda x: 2**x, list(range(10-bp-bq+1, 1, -1)))))[0]
-        wr = choices(list(range(11-wp-wq+1)), [2**(10-wp-wq+1)]*2+list(map(lambda x: 2**x, list(range(10-wp-wq+1, 1, -1)))))[0]
+        # #the next powerful piece is the rook
+        # br = choices(list(range(11-bp-bq+1)), [2**(10-bp-bq+1)]*2+list(map(lambda x: 2**x, list(range(10-bp-bq+1, 1, -1)))))[0]
+        # wr = choices(list(range(11-wp-wq+1)), [2**(10-wp-wq+1)]*2+list(map(lambda x: 2**x, list(range(10-wp-wq+1, 1, -1)))))[0]
+        br = choices(list(range(2, -1, -1)), [1,1,1])[0]
+        wr = choices(list(range(2, -1, -1)), [1,1,1])[0]
 
         for _ in range(br):
             pos = self.place_at_random('bR')
@@ -107,8 +111,10 @@ class GameState:
             if pos == (7,7) and white_king_castle and random() < 0.5:
                 self.cur_castle_rights.wks = True
         #the next one - bishop
-        bb = choices(list(range(11-bp-bq-br+3)), [2**(10-bp-bq-br+3)]*2+list(map(lambda x: 2**x, list(range(10-bp-bq-br+3, 1, -1)))))[0]
-        wb = choices(list(range(11-wp-wq-wr+3)), [2**(10-wp-wq-wr+3)]*2+list(map(lambda x: 2**x, list(range(10-wp-wq-wr+3, 1, -1)))))[0]
+        # bb = choices(list(range(11-bp-bq-br+3)), [2**(10-bp-bq-br+3)]*2+list(map(lambda x: 2**x, list(range(10-bp-bq-br+3, 1, -1)))))[0]
+        # wb = choices(list(range(11-wp-wq-wr+3)), [2**(10-wp-wq-wr+3)]*2+list(map(lambda x: 2**x, list(range(10-wp-wq-wr+3, 1, -1)))))[0]
+        bb = choices(list(range(2, -1, -1)), [1,1,1])[0]
+        wb = choices(list(range(2, -1, -1)), [1,1,1])[0]
         for _ in range(bb):
             self.place_at_random('bB')
         
@@ -116,8 +122,10 @@ class GameState:
             self.place_at_random('wB')
 
         #the last one - knight
-        bn = choices(list(range(11-bp-bq-br-bb+5)), [2**(10-bp-bq-br-bb+5)]*3+list(map(lambda x: 2**x, list(range(10-bp-bq-br-bb+5, 2, -1)))))[0]
-        wn = choices(list(range(11-wp-wq-wr-wb+5)), [2**(10-wp-wq-wr-wb+5)]*3+list(map(lambda x: 2**x, list(range(10-wp-wq-wr-wb+5, 2, -1)))))[0]
+        # bn = choices(list(range(11-bp-bq-br-bb+5)), [2**(10-bp-bq-br-bb+5)]*3+list(map(lambda x: 2**x, list(range(10-bp-bq-br-bb+5, 2, -1)))))[0]
+        # wn = choices(list(range(11-wp-wq-wr-wb+5)), [2**(10-wp-wq-wr-wb+5)]*3+list(map(lambda x: 2**x, list(range(10-wp-wq-wr-wb+5, 2, -1)))))[0]
+        bn = choices(list(range(2, -1, -1)), [1,1,1])[0]
+        wn = choices(list(range(2, -1, -1)), [1,1,1])[0]
         for _ in range(bn):
             self.place_at_random('bN')
         
@@ -157,7 +165,7 @@ class GameState:
         for i, line in enumerate(self.board):
             for j, pos in enumerate(line):
                 if pos != "--":
-                    nested_list_position[i][j] = self.position_dict[pos]+1
+                    nested_list_position[i][j][self.position_dict[pos]] = 1
         return nested_list_position
 
     def update_castle_rights(self, move):
@@ -618,6 +626,51 @@ class GameState:
                 self.black_king_loc = (r, c)
                 if not will_be_in_check1 and not will_be_in_check2:
                     moves.append(Move((r, c), (r, c - 2), self.board, castle_move=True))
+    def get_fen(self):
+        fen_str=""
+        count_empty = 0
+
+        #board parsing
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] == '--':
+                    count_empty += 1
+                    if j == 7:
+                        fen_str += str(count_empty)
+                        count_empty = 0
+                else:
+                    if count_empty != 0:
+                        fen_str += str(count_empty)
+                        count_empty = 0
+                    
+                    symb = self.board[i][j][1]
+                    if self.board[i][j][0] == 'b':
+                        symb = symb.lower()
+                    
+                    fen_str += symb
+            if i != 7:
+                fen_str += '/'
+            else: 
+                fen_str += ' '
+        
+        #who makes move
+        if self.white_to_move:
+            fen_str += 'w '
+        else:
+            fen_str += 'b '
+        
+        #castling
+        castling = self.cur_castle_rights
+        if castling.wks:
+            fen_str += "K"
+        if castling.wqs:
+            fen_str += 'Q'
+        if castling.bks:
+            fen_str += 'k'
+        if castling.bqs:
+            fen_str += 'q'
+        
+        return fen_str
 
 
 class CastleRights:

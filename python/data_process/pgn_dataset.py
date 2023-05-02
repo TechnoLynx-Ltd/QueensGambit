@@ -93,7 +93,7 @@ def parse_board(board):
         positions = line.split(" ")
         for j, pos in enumerate(positions):
             if pos != ".":
-                piece_positions[i, j] = position_dict[pos]+1
+                piece_positions[i, j, position_dict[pos]] = 1
 
     return piece_positions
 
@@ -142,7 +142,7 @@ def parse_pgn(filename, debug=False):
                 continue
 
             # Parse moves
-            cur_white_move = True
+            cur_white_move = False
             for move_idx, move in enumerate(game.mainline_moves()):
                 board.push(move)
                 piece_positions = parse_board(board)
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     load_data_from_pgn(filenames, save_to_file=True, debug=False)
 
     print('Open and check .npy files')
-    print(np.load("../../data/npy/X_positions.npy").shape)
-    print(np.load("../../data/npy/X_white_move.npy").shape)
-    print(np.load("../../data/npy/y_moves.npy").shape)
-    print(np.load("../../data/npy/y_result.npy").shape)
+    # print(np.load("../../data_unused/npy/X_positions.npy").shape)
+    # print(np.load("../../data_unused/npy/X_white_move.npy").shape)
+    # print(np.load("../../data_unused/npy/y_moves.npy").shape)
+    # print(np.load("../../data_unused/npy/y_result.npy").shape)

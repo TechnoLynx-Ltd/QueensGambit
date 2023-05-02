@@ -4,6 +4,7 @@ Module of AI invoking methods
 
 import random
 import numpy as np
+import chess
 
 piece_weights = {
     '-': 0,
@@ -134,9 +135,9 @@ def find_model_best_move(game_state, valid_moves, model):
     return next_move
 
 def find_model_best_move_without_scoring(game_state, valid_moves, model):
-    min_loosing = (0,0,float("inf"))
+    min_loosing = (0,float("inf"),float("inf"))
     cur_left_to_win = float("inf")
-
+    
     for move in valid_moves:
 
         # Make a valid move
@@ -144,32 +145,37 @@ def find_model_best_move_without_scoring(game_state, valid_moves, model):
 
         # Expand current position to 4D b/c model input requirement
         nested_list_pos = game_state.get_position()
-        nested_list_pos =[[[[nested_list_pos[i][j][k] for k in range(12)] for j in range(8)] for i in range(8)]
+        nested_list_pos =[[[[nested_list_pos[i][j][k] for k in range(12)]+[game_state.white_to_move] for j in range(8)] for i in range(8)]
                            for n in range(1)]
 
         # res = np.asarray(nested_list_pos).astype(np.uint8)
-        prediction = model.predict([np.asarray(nested_list_pos).astype(np.uint8), np.asarray([game_state.white_to_move]).astype(np.uint8)])
+        prediction = model.predict([np.asarray(nested_list_pos).astype(np.uint8)])
         move_result = prediction[0][0]
         left_to_win = prediction[1][0]
         if game_state.white_to_move:
             move_result = tuple(move_result[::-1])
         
-        if min_loosing[2] - move_result[2] > 0.05:
+        if min_loosing[0] - move_result[0] < 0:
             min_loosing = move_result
             next_move = move
             cur_left_to_win = left_to_win
-        elif min_loosing[2] - move_result[2] > 0:
-            if min_loosing[1] - move_result[1] > 0.05:
-                min_loosing = move_result
-                next_move = move
-                cur_left_to_win = left_to_win
-            elif min_loosing[1] - move_result[1] > 0 and left_to_win < cur_left_to_win:
-                min_loosing = move_result
-                next_move = move
-                cur_left_to_win = left_to_win
+        if min_loosing[2] - move_result[2] > 0:
+            min_loosing = move_result
+            next_move = move
+            cur_left_to_win = left_to_win
+        # elif min_loosing[2] - move_result[2] > 0:
+        #     if min_loosing[1] - move_result[1] > 0.01:
+        #         min_loosing = move_result
+        #         next_move = move
+        #         cur_left_to_win = left_to_win
+        #     elif min_loosing[1] - move_result[1] > 0 and left_to_win < cur_left_to_win:
+        #         min_loosing = move_result
+        #         next_move = move
+        #         cur_left_to_win = left_to_win
 
         # Restore game_state into original position
         game_state.undo_move()
+    print(game_state.white_to_move)
     print(min_loosing, cur_left_to_win)
     return next_move
 
@@ -209,4 +215,106 @@ def score_board(gs):
                 score += piece_weights[square[1]]
             else:
                 score -= piece_weights[square[1]]
+    return score
+
+def find_minmax_best_move_bitboard(gs, valid_moves, depth = STANDARD_DEPTH):
+    global next_move
+    global DEPTH
+    DEPTH = depth
+    next_move = list(valid_moves)[0]
+    find_minmax_move_bitboard(gs, valid_moves, depth, gs.turn == chess.WHITE, -CHECKMATE, CHECKMATE)
+    return next_move
+
+
+def find_minmax_move_bitboard(gs, valid_moves, depth, white_to_move, alpha, beta):
+    global next_move
+    if depth == 0:
+        return score_board_bitboard(gs)
+    scores_moves = {}
+    # print(len(list(valid_moves)))
+
+    if gs.turn == chess.WHITE:
+        for move in valid_moves:
+            gs.push(move)
+            next_moves = gs.legal_moves
+            score = find_minmax_move_bitboard(gs, next_moves, depth - 1, False, alpha, beta)
+            if score in scores_moves:
+                scores_moves[score].append(move)
+            else:
+                scores_moves[score] = [move]
+            gs.pop()
+            if score > alpha:
+                alpha = score
+            if beta <= alpha:
+                break
+        all_scores = list(scores_moves.keys())
+        if(len(all_scores) == 0):
+            return -CHECKMATE
+        all_scores.sort(reverse=True)
+        all_scores = all_scores[:min(3,len(all_scores))]
+        # print(all_scores)
+        weights = [0]*len(all_scores)
+        to_add = 0
+        if all_scores[-1] < 0:
+            to_add = abs(all_scores[-1])
+        for i in range(len(weights)):
+            weights[i] = all_scores[i] + to_add + 1
+        # print(all_scores, to_add)
+        # print(weights)
+        score = random.choices(all_scores, weights=weights, k=1)[0]
+        # print(score)
+        if depth == DEPTH:
+            next_move = random.choices(scores_moves[score], k=1)[0]
+        return score
+    else:
+        for move in valid_moves:
+            gs.push(move)
+            next_moves = gs.legal_moves
+            score = find_minmax_move_bitboard(gs, next_moves, depth - 1, True, alpha, beta)
+            if score in scores_moves:
+                scores_moves[score].append(move)
+            else:
+                scores_moves[score] = [move]
+            gs.pop()
+            if score < beta:
+                beta = score
+            if beta <= alpha:
+                break
+        all_scores = list(scores_moves.keys())
+        if(len(all_scores) == 0):
+            return CHECKMATE
+        all_scores.sort()
+        all_scores = all_scores[:min(3,len(all_scores))]
+        weights = [0]*len(all_scores)
+        to_add = 0
+        if all_scores[0] < 0:
+            to_add = abs(all_scores[0])
+        for i in range(len(weights)):
+            weights[i] = all_scores[i] + to_add + 1
+        # print(weights)
+        score = random.choices(all_scores, weights=weights, k=1)[0]
+        if depth == DEPTH:
+            next_move = random.choices(scores_moves[score], k=1)[0]
+        return score 
+
+def score_board_bitboard(gs):
+    """
+    Positive score -> white
+    Negative score -> black
+    """
+    if gs.is_checkmate():
+        if gs.turn == chess.WHITE:
+            return -CHECKMATE
+        else:
+            return CHECKMATE
+    elif gs.is_stalemate():
+        return STALEMATE
+
+    score = 0
+    for symb in gs.fen().split(' ')[0]:
+        if not symb.isnumeric() and not symb =='/':
+            if symb.isupper():
+                score += piece_weights[symb]
+            else:
+                score -= piece_weights[symb.upper()]
     return score

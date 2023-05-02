@@ -71,12 +71,20 @@ class ModelTournament:
 
 #For model ranking
 if __name__ == "__main__":
-    model = keras.models.load_model('../model')
+    model = keras.models.load_model('/home/otsepilova/QueensGambit/python/model/model_sim_data_real_game_validation_real_games_fixed')
+    model_2 = keras.models.load_model('/home/otsepilova/QueensGambit/python/model/model_1_unsim_10_sim_data')
+    model_3 = keras.models.load_model('/home/otsepilova/QueensGambit/python/model/model_sim_data')
     def find_model_move(gs, valid_moves):
         return ai.find_model_best_move_without_scoring(gs, valid_moves, model)
+    # def find_model_move_2(gs, valid_moves):
+    #     return ai.find_model_best_move_without_scoring(gs, valid_moves, model_2)
+    # def find_model_move_3(gs, valid_moves):
+        return ai.find_model_best_move_without_scoring(gs, valid_moves, model_3)
     def find_minmax_best_move_1(gs, valid_moves):
         return ai.find_minmax_best_move(gs, valid_moves, depth=1)
-    tournament = ModelTournament({"ANN": find_model_move, "MinMax depth 1":find_minmax_best_move_1, "MinMax depth 2":ai.find_minmax_best_move})
+    def find_minmax_best_move_3(gs, valid_moves):
+        return ai.find_minmax_best_move(gs, valid_moves, depth=3)
+    tournament = ModelTournament({"Regul_data": find_model_move, "MinMax 1":find_minmax_best_move_1,  "MinMax 2": ai.find_minmax_best_move})
     result = tournament.play_tournament()
     tournament.rank_models()
 
