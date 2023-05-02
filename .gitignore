@@ -11,6 +11,9 @@ __pycache__/
 data/
 
 data_simulated/
+data_sim_bitboard/
+data_sim_bitboard_real_game/
+data_sim_bitboard_less_random/
 
 saved_model_js/
 saved_model_js_1/
