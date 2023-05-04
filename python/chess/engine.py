@@ -67,8 +67,8 @@ class GameState:
 
         #more pawns should be more probable (more close to the game start board)
         #weights are corresponding to the pieces number
-        bp = choices(list(range(8,-1,-1)), list(range(9,1,-1)))[0]
-        wp = choices(list(range(8,-1,-1)), list(range(9,1,-1)))[0]
+        bp = choices(list(range(8,-1,-1)), list(range(9,0,-1)))[0]
+        wp = choices(list(range(8,-1,-1)), list(range(9,0,-1)))[0]
         for _ in range(bp):
             pos = self.place_at_random('bP', low_bound=1, up_bound=6)
             if self.white_to_move and pos[0]==3 and len(self.en_passant_loc) == 0 and random() < 0.5:

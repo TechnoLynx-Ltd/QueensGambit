@@ -18,7 +18,7 @@ class ModelsGame:
         self.stalemates = 0
     
     def generate_random_gs(self):
-        gs_fen = GameState(randomize=False).get_fen()
+        gs_fen = GameState(randomize=True).get_fen()
         return gs_fen
 
 

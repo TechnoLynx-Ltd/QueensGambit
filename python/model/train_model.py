@@ -41,6 +41,15 @@ def array_from_fen(fen:str):
 
     return bitboards_to_array(bitboards)
 
+def to_categorical(board):
+    board_categorical = np.zeros((8,8,12))
+    for i in range(8):
+        for j in range(8):
+            for k in range(12):
+                if board[k][i][j] !=0:
+                    board_categorical[i][j][k] = 1
+    return board_categorical
+
 def scheduler(epoch, lr):
   if epoch < 10:
     return lr
@@ -91,9 +100,9 @@ class DataGenerator(Sequence):
         if self.from_fen:
             positions = []
             for fen_pos in self.x_position[idx * self.batch_size:(idx + 1) * self.batch_size]:
-                positions.append(array_from_fen(fen_pos))
+                positions.append(to_categorical(array_from_fen(fen_pos)))
             X_position = np.array(positions)
-            X_position = X_position.reshape((X_position.shape[0],8, 8, 12))
+            # X_position = X_position.reshape((X_position.shape[0],8, 8, 12))
         else:
             X_position = self.x_position[idx * self.batch_size:(idx + 1) * self.batch_size] 
         white_move = []

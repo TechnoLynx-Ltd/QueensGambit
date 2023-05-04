@@ -3,7 +3,7 @@ import numpy as np
 if __name__ == "__main__":
     X_position_val = np.load("../../data/npy/X_positions.npy").astype(np.int8)
     y_moves = np.load("../../data/npy/y_moves.npy").astype(np.uint8)
-    indeces = (y_moves==1)
+    indeces = (y_moves==0)
     y_result = np.load("../../data/npy/y_result.npy").astype(np.int8)
     X_white_to_move = np.load("../../data/npy/X_white_move.npy").astype(np.int8)
     y_result = y_result[indeces]

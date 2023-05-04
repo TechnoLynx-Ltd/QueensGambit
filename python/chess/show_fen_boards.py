@@ -1,10 +1,10 @@
 import numpy as np
 if __name__ == "__main__":
-    y_moves = np.load("../../data_sim_bitboard/npy/y_moves.npy").astype(np.uint8)
+    y_moves = np.load("../../data_sim_bitboard_less_random/npy/y_moves.npy").astype(np.uint8)
     indeces = (y_moves==1)
-    X_position_simulated = np.load("../../data_sim_bitboard/npy/fen_bitboards.npy")
+    X_position_simulated = np.load("../../data_sim_bitboard_less_random/npy/fen_bitboards.npy")
     X_position_simulated = X_position_simulated[indeces]
-    y_result = np.load("../../data_sim_bitboard/npy/y_result.npy").astype(np.int8)
+    y_result = np.load("../../data_sim_bitboard_less_random/npy/y_result.npy").astype(np.int8)
     y_result = y_result[indeces]
     i = 0
     black_won_indeces = set()
