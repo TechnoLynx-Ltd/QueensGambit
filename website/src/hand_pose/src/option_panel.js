@@ -32,23 +32,24 @@ export async function setupDatGui(urlParams) {
   gui.domElement.id = 'gui';
 
   // The camera folder contains options for video settings.
-  const cameraFolder = gui.addFolder('Camera');
-  const fpsController = cameraFolder.add(params.STATE.camera, 'targetFPS');
-  fpsController.onFinishChange((_) => {
+  //const cameraFolder = gui.addFolder('Camera');
+  //const fpsController = cameraFolder.add(params.STATE.camera, 'targetFPS');
+  /*fpsController.onFinishChange((_) => {
     params.STATE.isTargetFPSChanged = true;
-  });
-  const sizeController = cameraFolder.add(
-      params.STATE.camera, 'sizeOption', Object.keys(params.VIDEO_SIZE));
-  sizeController.onChange(_ => {
-    params.STATE.isSizeOptionChanged = true;
-  });
-  cameraFolder.open();
+  });*/
+  //const sizeController = cameraFolder.add(
+  //    params.STATE.camera, 'sizeOption', Object.keys(params.VIDEO_SIZE));
+  //sizeController.onChange(_ => {
+  //  params.STATE.isSizeOptionChanged = true;
+  //});
+  //cameraFolder.open();
 
   // The model folder contains options for model selection.
   const modelFolder = gui.addFolder('Model');
 
   const model = 'mediapipe_hands'; //urlParams.get('model');
   let type = urlParams.get('type');
+  console.log(type)
   let maxNumHands = urlParams.get('maxNumHands');
 
   switch (model) {
@@ -80,7 +81,7 @@ export async function setupDatGui(urlParams) {
 
   showModelConfigs(modelFolder, type, maxNumHands);
 
-  modelFolder.open();
+  //modelFolder.open();
 
   const backendFolder = gui.addFolder('Backend');
 

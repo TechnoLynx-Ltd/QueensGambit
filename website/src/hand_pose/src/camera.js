@@ -74,6 +74,7 @@ export class Camera {
 
     const {targetFPS, sizeOption} = cameraParam;
     const $size = params.VIDEO_SIZE[sizeOption];
+    console.log($size)
     const videoConfig = {
       'audio': false,
       'video': {
@@ -171,15 +172,15 @@ export class Camera {
       this.drawKeypoints(hand.keypoints, hand.handedness);
     }
     // Don't render 3D hands after first two.
-    if (ctxt == null) {
+   /* if (ctxt == null) {
       return;
-    }
-    if (hand.keypoints3D != null && params.STATE.modelConfig.render3D) {
+    }*/
+    /*if (hand.keypoints3D != null && params.STATE.modelConfig.render3D) {
       this.drawKeypoints3D(hand.keypoints3D, hand.handedness, ctxt);
     } else {
       // Clear scatter plot.
       this.drawKeypoints3D([], '', ctxt);
-    }
+    }*/
   }
 
   /**
