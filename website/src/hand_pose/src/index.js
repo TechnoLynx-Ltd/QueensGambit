@@ -127,7 +127,7 @@ async function renderResult() {
   // from a URL that does not exist).
   if (detector != null) {
     // FPS only counts the time it takes to finish estimateHands.
-    beginEstimateHandsStats();
+    //beginEstimateHandsStats();
 
     // Detectors can throw errors, for example when using custom URLs that
     // contain a model that doesn't provide the expected output.
@@ -145,7 +145,7 @@ async function renderResult() {
       alert(error);
     }
 
-    endEstimateHandsStats();
+    //endEstimateHandsStats();
   }
 
   //camera.drawCtx();

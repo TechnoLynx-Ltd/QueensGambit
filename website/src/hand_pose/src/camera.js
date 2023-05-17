@@ -52,14 +52,14 @@ function createScatterGLContext(selectors) {
   };
 }
 
-const scatterGLCtxtLeftHand = createScatterGLContext('#scatter-gl-container-left');
-const scatterGLCtxtRightHand = createScatterGLContext('#scatter-gl-container-right');
+//const scatterGLCtxtLeftHand = createScatterGLContext('#scatter-gl-container-left');
+//const scatterGLCtxtRightHand = createScatterGLContext('#scatter-gl-container-right');
 
 export class Camera {
   constructor() {
     this.video = document.getElementById('video');
-    this.canvas = document.getElementById('output');
-    this.ctx = this.canvas.getContext('2d');
+    //this.canvas = document.getElementById('output');
+    //this.ctx = this.canvas.getContext('2d');
   }
 
   /**
@@ -108,23 +108,23 @@ export class Camera {
     camera.video.width = videoWidth;
     camera.video.height = videoHeight;
 
-    camera.canvas.width = videoWidth;
-    camera.canvas.height = videoHeight;
-    const canvasContainer = document.querySelector('.canvas-wrapper');
-    canvasContainer.style = `width: ${videoWidth}px; height: ${videoHeight}px`;
+    //camera.canvas.width = videoWidth;
+    //camera.canvas.height = videoHeight;
+    //const canvasContainer = document.querySelector('.canvas-wrapper');
+    //canvasContainer.style = `width: ${videoWidth}px; height: ${videoHeight}px`;
 
     // Because the image from camera is mirrored, need to flip horizontally.
-    camera.ctx.translate(camera.video.videoWidth, 0);
-    camera.ctx.scale(-1, 1);
+    //camera.ctx.translate(camera.video.videoWidth, 0);
+    //camera.ctx.scale(-1, 1);
 
-    for (const ctxt of [scatterGLCtxtLeftHand, scatterGLCtxtRightHand]) {
+    /*for (const ctxt of [scatterGLCtxtLeftHand, scatterGLCtxtRightHand]) {
       ctxt.scatterGLEl.style =
           `width: ${videoWidth / 2}px; height: ${videoHeight / 2}px;`;
       ctxt.scatterGL.resize();
 
       ctxt.scatterGLEl.style.display =
           params.STATE.modelConfig.render3D ? 'inline-block' : 'none';
-    }
+    }*/
 
     return camera;
   }
