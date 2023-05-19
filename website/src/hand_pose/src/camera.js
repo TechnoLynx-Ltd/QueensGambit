@@ -227,30 +227,4 @@ export class Camera {
     this.ctx.arc(x, y, r, 0, 2 * Math.PI);
     this.ctx.fill();
   }
-
-  drawKeypoints3D(keypoints, handedness, ctxt) {
-    const scoreThreshold = params.STATE.modelConfig.scoreThreshold || 0;
-    const pointsData =
-        keypoints.map(keypoint => ([-keypoint.x, -keypoint.y, -keypoint.z]));
-
-    const dataset =
-        new scatter.ScatterGL.Dataset([...pointsData, ...ANCHOR_POINTS]);
-
-    ctxt.scatterGL.setPointColorer((i) => {
-      if (keypoints[i] == null || keypoints[i].score < scoreThreshold) {
-        // hide anchor points and low-confident points.
-        return '#ffffff';
-      }
-      return handedness === 'Left' ? '#ff0000' : '#0000ff';
-    });
-
-    if (!ctxt.scatterGLHasInitialized) {
-      ctxt.scatterGL.render(dataset);
-    } else {
-      ctxt.scatterGL.updateDataset(dataset);
-    }
-    const sequences = connections.map(pair => ({indices: pair}));
-    ctxt.scatterGL.setSequences(sequences);
-    ctxt.scatterGLHasInitialized = true;
-  }
 }

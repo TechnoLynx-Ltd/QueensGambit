@@ -92,26 +92,6 @@ async function checkGuiUpdate() {
   }
 }
 
-function beginEstimateHandsStats() {
-  startInferenceTime = (performance || Date).now();
-}
-
-function endEstimateHandsStats() {
-  const endInferenceTime = (performance || Date).now();
-  inferenceTimeSum += endInferenceTime - startInferenceTime;
-  ++numInferences;
-
-  const panelUpdateMilliseconds = 1000;
-  if (endInferenceTime - lastPanelUpdate >= panelUpdateMilliseconds) {
-    const averageInferenceTime = inferenceTimeSum / numInferences;
-    inferenceTimeSum = 0;
-    numInferences = 0;
-    //stats.customFpsPanel.update(
-    //    1000.0 / averageInferenceTime, 120 /* maxValue */);
-    lastPanelUpdate = endInferenceTime;
-  }
-}
-
 async function renderResult() {
   if (camera.video.readyState < 2) {
     await new Promise((resolve) => {
@@ -135,10 +115,6 @@ async function renderResult() {
       hands = await detector.estimateHands(
           camera.video,
           {flipHorizontal: false});
-      if (hands.length > 0) {
-        console.log(hands[0]["keypoints"]);  
-      }
-      
     } catch (error) {
       detector.dispose();
       detector = null;
@@ -156,14 +132,21 @@ async function renderResult() {
   if (hands && hands.length > 0 && !STATE.isModelChanged) {
     //camera.drawResults(hands);
   }
+  if (hands.length > 0) {
+        return [hands[0]["keypoints"][0]['x'], hands[0]["keypoints"][0]['y']] 
+        
+        //console.log(hands[0]["keypoints"]);  
+  } else {
+    return [0,0]
+  }
 }
 
 async function renderPrediction() {
-  await checkGuiUpdate();
+  //await checkGuiUpdate();
 
-  if (!STATE.isModelChanged) {
+  //if (!STATE.isModelChanged) {
     await renderResult();
-  }
+  //}
 
   rafId = requestAnimationFrame(renderPrediction);
 };
@@ -181,12 +164,19 @@ async function app() {
   //stats = setupStats();
 
   camera = await Camera.setupCamera(STATE.camera);
+  console.log(camera.video.width)
+  console.log(camera.video.height)
 
   await setBackendAndEnvFlags(STATE.flags, STATE.backend);
 
   detector = await createDetector();
 
-  renderPrediction();
+  var intervalId = window.setInterval(async function(){
+   r = await renderResult();
+   console.log(r)
+}, 3000);
+  //renderPrediction();
+
 };
 
 app();
