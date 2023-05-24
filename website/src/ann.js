@@ -36,12 +36,12 @@ export function find_model_best_move(game_state, valid_moves)
         // Expand current position to 4D b/c model input requirement
         const input = tf.tensor([ game_state.get_position() ]);
 
-        // Model predicts score (shape:(1,2)) of current position
+        // Model predicts score (shape:(1,3)) of current position
         scores = model.predict(input).arraySync();
-        console.assert(scores[0][0] + scores[0][1] >= 0.99);
+        // console.assert(scores[0][0] + scores[0][1] >= 0.99);
 
         // White score: 0, Black score: 1
-        score = scores[0][game_state.white_to_move ? 0 : 1];
+        score = scores[0][game_state.white_to_move ? 0 : 2];
 
         if (score > max_score)
         {

@@ -9,6 +9,10 @@ __pycache__/
 !/python/model/train_model.py
 
 data/
+data_unused/
+simulated_data_1/
+data_simulated/
+node_modules/
 
 saved_model_js/
 
