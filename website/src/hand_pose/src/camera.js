@@ -74,6 +74,7 @@ export class Camera {
 
     const {targetFPS, sizeOption} = cameraParam;
     const $size = params.VIDEO_SIZE[sizeOption];
+    console.log('camera size from setupCamera:')
     console.log($size)
     const videoConfig = {
       'audio': false,
@@ -93,6 +94,12 @@ export class Camera {
     const stream = await navigator.mediaDevices.getUserMedia(videoConfig);
 
     const camera = new Camera();
+    console.log('CAMERA');
+    console.log(camera);
+    console.log('VIDEO');
+    console.log(camera.video);
+    console.log('STREAM');
+    console.log(stream);
     camera.video.srcObject = stream;
 
     await new Promise((resolve) => {

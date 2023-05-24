@@ -36,6 +36,8 @@ let detector, camera, stats;
 let startInferenceTime, numInferences = 0;
 let inferenceTimeSum = 0, lastPanelUpdate = 0;
 let rafId;
+let detectedHandPose;
+let xStepSize, yStepSize;
 
 async function createDetector() {
   STATE.model = handdetection.SupportedModels.MediaPipeHands;
@@ -102,7 +104,6 @@ async function renderResult() {
   }
 
   let hands = null;
-
   // Detector can be null if initialization failed (for example when loading
   // from a URL that does not exist).
   if (detector != null) {
@@ -132,26 +133,36 @@ async function renderResult() {
   if (hands && hands.length > 0 && !STATE.isModelChanged) {
     //camera.drawResults(hands);
   }
+
   if (hands.length > 0) {
         return [hands[0]["keypoints"][0]['x'], hands[0]["keypoints"][0]['y']] 
         
-        //console.log(hands[0]["keypoints"]);  
+        console.log(hands[0]["keypoints"]);  
   } else {
-    return [0,0]
+    return [-100,-100]
   }
 }
 
 async function renderPrediction() {
   //await checkGuiUpdate();
 
-  //if (!STATE.isModelChanged) {
-    await renderResult();
-  //}
-
+  detectedHandPose = await renderResult();
+  if(detectedHandPose[0] > 0 && detectedHandPose[1] > 0) {
+    if(detectedHandPose[0] < 0) {
+      detectedHandPose[0] = 0
+    }
+    if(detectedHandPose[1] < 0) {
+      detectedHandPose[1] = 0
+    }
+    detectedHandPose[0] = camera.video.width - detectedHandPose[0];
+    detectedHandPose[0] = Math.ceil(detectedHandPose[0] / xStepSize);
+    detectedHandPose[1] = Math.ceil(detectedHandPose[1] / yStepSize);
+    console.log(detectedHandPose)
+  }
   rafId = requestAnimationFrame(renderPrediction);
 };
 
-async function app() {
+export async function init_hand_tracking() {
   // Gui content will change depending on which model is in the query string.
   const urlParams = new URLSearchParams(window.location.search);
   /*if (!urlParams.has('model')) {
@@ -164,19 +175,21 @@ async function app() {
   //stats = setupStats();
 
   camera = await Camera.setupCamera(STATE.camera);
+  console.log('VIDEO SIZE');
   console.log(camera.video.width)
   console.log(camera.video.height)
-
+  xStepSize = camera.video.width / 8;
+  yStepSize = camera.video.height / 8;
+  console.log(xStepSize)
+  console.log(yStepSize)
   await setBackendAndEnvFlags(STATE.flags, STATE.backend);
 
   detector = await createDetector();
-
-  var intervalId = window.setInterval(async function(){
+  /*var intervalId = window.setInterval(async function(){
    r = await renderResult();
    console.log(r)
-}, 3000);
+}, 3000);*/
   //renderPrediction();
 
 };
-
-app();
+//init_hand_tracking();

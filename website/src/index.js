@@ -1,6 +1,7 @@
 import { Game_state, Move } from "./engine.js";
 import { find_minmax_best_move } from "./minmax.js";
 import { load_model, find_model_best_move } from "./ann.js";
+import { init_hand_tracking } from "./handpose.js";
 
 import bB from "../../resources/images/bB.png";
 import bK from "../../resources/images/bK.png";
@@ -71,6 +72,12 @@ export function init()
     draw_message("Please, choose a type for the AI model");
     valid_moves = game_state.get_valid_moves();
 }
+
+export function turn_on_hand_tracking()
+{
+    init_hand_tracking()
+}
+
 
 export function undo_click()
 {

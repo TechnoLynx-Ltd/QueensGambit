@@ -231,8 +231,11 @@ function getTunableRange(flag) {
  * @param {dat.gui.GUI} folderController
  * @param {string} backendName
  */
-function showBackendFlagSettings(folderController, backendName) {
+function showBackendFlagSettings(backendName) {
   const tunableFlags = params.BACKEND_FLAGS_MAP[backendName];
+  console.log('BACKEND_NAME:')
+  console.log(backendName)
+  console.log(tunableFlags)
   for (let index = 0; index < tunableFlags.length; index++) {
     const flag = tunableFlags[index];
     const flagName = params.TUNABLE_FLAG_NAME_MAP[flag] || flag;
