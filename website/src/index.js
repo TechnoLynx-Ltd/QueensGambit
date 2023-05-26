@@ -1,7 +1,8 @@
 import { Game_state, Move } from "./engine.js";
 import { find_minmax_best_move } from "./minmax.js";
 import { load_model, find_model_best_move } from "./ann.js";
-import { init_hand_tracking } from "./handpose.js";
+import { init_hand_pose_interface, detect_hand } from "./handpose_chess_interface.js"
+
 
 import bB from "../../resources/images/bB.png";
 import bK from "../../resources/images/bK.png";
@@ -47,6 +48,7 @@ let game_over = false;
 let made_move = false;
 let ai_type = "";
 let canvasDiv;
+let isHandTracking = false;
 
 export function init()
 {
@@ -73,11 +75,37 @@ export function init()
     valid_moves = game_state.get_valid_moves();
 }
 
-export function turn_on_hand_tracking()
+export async function turn_on_hand_tracking()
 {
-    init_hand_tracking()
+    await init_hand_pose_interface();
+    isHandTracking = true;
+    hand_tracking_loop();
 }
 
+
+async function hand_tracking_loop() {
+    if(isHandTracking) {
+        var hand_detection = await detect_hand();
+        if(hand_detection['is_hand_present'] == true) {
+            draw_game_state();
+            highlight_hand_position(hand_detection['position']);
+        }
+        requestAnimationFrame(hand_tracking_loop)
+    }
+}
+
+function highlight_hand_position(hand_position) {
+    let row = hand_position[1];
+    let column = hand_position[0];
+
+    context.globalAlpha = 0.5;
+    context.fillStyle = "Yellow";
+    context.fillRect(
+        column * square_width,
+        row * square_height,
+        square_width,
+        square_height);
+}
 
 export function undo_click()
 {

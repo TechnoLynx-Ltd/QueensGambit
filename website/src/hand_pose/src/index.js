@@ -32,7 +32,7 @@ import {STATE} from './shared/params';
 import {setupStats} from './shared/stats_panel';
 import {setBackendAndEnvFlags} from './shared/util';
 
-let detector, camera, stats;
+export let detector, camera, stats;
 let startInferenceTime, numInferences = 0;
 let inferenceTimeSum = 0, lastPanelUpdate = 0;
 let rafId;
@@ -94,7 +94,7 @@ async function checkGuiUpdate() {
   }
 }
 
-async function renderResult() {
+export async function renderResult() {
   if (camera.video.readyState < 2) {
     await new Promise((resolve) => {
       camera.video.onloadeddata = () => {
@@ -134,19 +134,21 @@ async function renderResult() {
     //camera.drawResults(hands);
   }
 
-  if (hands.length > 0) {
+  /*if (hands.length > 0) {
         return [hands[0]["keypoints"][0]['x'], hands[0]["keypoints"][0]['y']] 
         
         console.log(hands[0]["keypoints"]);  
   } else {
-    return [-100,-100]
-  }
-}
+    return None
+  }*/
 
-async function renderPrediction() {
+  return hands
+};
+
+export async function renderPrediction() {
   //await checkGuiUpdate();
-
   detectedHandPose = await renderResult();
+  console.log(detectedHandPose)
   if(detectedHandPose[0] > 0 && detectedHandPose[1] > 0) {
     if(detectedHandPose[0] < 0) {
       detectedHandPose[0] = 0
@@ -157,10 +159,11 @@ async function renderPrediction() {
     detectedHandPose[0] = camera.video.width - detectedHandPose[0];
     detectedHandPose[0] = Math.ceil(detectedHandPose[0] / xStepSize);
     detectedHandPose[1] = Math.ceil(detectedHandPose[1] / yStepSize);
-    console.log(detectedHandPose)
   }
   rafId = requestAnimationFrame(renderPrediction);
 };
+
+
 
 export async function init_hand_tracking() {
   // Gui content will change depending on which model is in the query string.
