@@ -87,8 +87,12 @@ async function hand_tracking_loop() {
     if(isHandTracking) {
         var hand_detection = await detect_hand();
         if(hand_detection['is_hand_present'] == true) {
+            if(hand_detection['is_click'] == true) {
+                await board_click2([hand_detection['position'][1], hand_detection['position'][0]])
+            }
             draw_game_state();
             highlight_hand_position(hand_detection['position']);
+            
         }
         requestAnimationFrame(hand_tracking_loop)
     }
@@ -313,13 +317,8 @@ function refresh_state()
     draw_game_state();
 }
 
-function play_human_turn()
+function play_human_turn(clicked_square)
 {
-    let coordinate_x = event.clientX - canvas.offsetLeft;
-    let coordinate_y = event.clientY - canvas.offsetTop;
-    let square_x = Math.floor(coordinate_x / square_width);
-    let square_y = Math.floor(coordinate_y / square_height);
-    let clicked_square = [square_y, square_x];
 
     if (
         Array.isArray(selected_square) &&
@@ -365,6 +364,29 @@ function delay(milliseconds){
     });
 }
 
+async function board_click2(clicked_square)
+{
+    if (game_over)
+    {
+        return;
+    }
+
+    let is_white_human_turn = (game_state.white_to_move && !white_ai);
+    let is_black_human_turn = (!game_state.white_to_move && !black_ai);
+
+    if (is_white_human_turn || is_black_human_turn)
+    {       
+        play_human_turn(clicked_square);
+        let human_finished = made_move;
+        refresh_state();
+        if(human_finished){
+            await delay(500);
+            play_ai_turn();
+        }
+        refresh_state();
+    }
+}
+
 async function board_click(event)
 {
     if (game_over)
@@ -377,7 +399,13 @@ async function board_click(event)
 
     if (is_white_human_turn || is_black_human_turn)
     {
-        play_human_turn();
+        let coordinate_x = event.clientX - canvas.offsetLeft;
+        let coordinate_y = event.clientY - canvas.offsetTop;
+        let square_x = Math.floor(coordinate_x / square_width);
+        let square_y = Math.floor(coordinate_y / square_height);
+        let clicked_square = [square_y, square_x];
+
+        play_human_turn(clicked_square);
         let human_finished = made_move;
         refresh_state();
         if(human_finished){

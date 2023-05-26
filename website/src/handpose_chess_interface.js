@@ -17,7 +17,6 @@ export async function detect_hand() {
 	hands = await renderResult();
 	if (hands.length > 0) {
 		var table_coord = calc_table_coord(hands[0]);
-		is_click(hands[0])
         return {'is_hand_present': true, 'is_click': is_click(hands[0]), 'position': table_coord};
     }
     else {
@@ -30,9 +29,6 @@ function is_click(hand) {
 	var click = hand["keypoints"][6]['y'] <hand["keypoints"][7]['y'];
 	var result = !prev_is_click && hand["keypoints"][6]['y'] <hand["keypoints"][7]['y']
 	prev_is_click = click;
-	if(result) {
-		console.log('IS_CLICK')
-	}
 	return result;
 	
 }
