@@ -46,19 +46,23 @@ let game_state = new Game_state();
 let game_over = false;
 let made_move = false;
 let ai_type = "";
+let canvasDiv;
 
 export function init()
 {
     load_model();
+    canvasDiv = document.getElementById("canvasdiv");
     canvas = document.getElementById("canvas");
+    canvas.width = Math.floor(canvasDiv.offsetWidth*0.9)
+    canvas.height = Math.floor(canvasDiv.offsetWidth*0.9)
     context = canvas.getContext("2d");
-    square_width = canvas.width / 8;
-    square_height = canvas.height / 8;
+    square_width = Math.floor(canvas.width / dimension);
+    square_height = Math.floor(canvas.height / dimension);
     canvas.addEventListener("click", board_click);
 
     for (let [name, image] of Object.entries(image_map))
     {
-        images[name] = new Image(64, 64);
+        images[name] = new Image(square_width, square_height);
         images[name].onload = draw_pieces;
         images[name].src = image;
     }
@@ -163,7 +167,7 @@ function draw_pieces()
             if (piece != "--")
             {
                 context.drawImage(
-                    piece_image, c * square_width, r * square_height);
+                    piece_image, c * square_width, r * square_height, square_width, square_height);
             }
         }
     }
