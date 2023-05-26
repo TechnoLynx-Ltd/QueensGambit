@@ -1,11 +1,4 @@
-mkdir data\npy
-cd python/data_process
-py pgn_dataset.py
-cd ../..
-pip install -r python/requirements.txt
-cd python/model
-py train_model.py
-cd ../../website
+cd website
 call npm install
 tensorflowjs_converter ^
     --input_format tfjs_layers_model ^
