@@ -1,5 +1,5 @@
 import { Game_state, Move } from "./engine.js";
-import { find_minmax_best_move } from "./minmax.js";
+import { find_minmax_best_move, find_stochastic_tree_search_best_move } from "./minmax.js";
 import { load_model, find_model_best_move } from "./ann.js";
 import { init_hand_pose_interface, detect_hand } from "./handpose_chess_interface.js"
 
@@ -16,6 +16,7 @@ import wN from "../../resources/images/wN.png";
 import wR from "../../resources/images/wR.png";
 import wQ from "../../resources/images/wQ.png";
 import wP from "../../resources/images/wP.png";
+
 
 let image_map =
 {
@@ -160,6 +161,17 @@ export function ann_click()
 
 }
 
+export function sts_click(){
+    if (ai_type.length == 0) {
+        ai_type = "Stochastic Tree Search";
+        display_ai();
+        draw_message("Please, choose a piece to move by clicking on it, then wait for your AI opponent.");
+    }
+    else
+        draw_message("You can't change the type of AI model during the game. Please, press reset and start-over");
+
+}
+
 function draw_board()
 {
     let square_colors = ["LightGray", "DarkGray"];
@@ -256,11 +268,18 @@ function play_ai_turn()
         case "MinMax":
         {
             move = find_minmax_best_move(game_state, valid_moves);
+            console.log("MOVE FOUND");
+            console.log(move);
             break;
         }
         case "ANN":
         {
             move = find_model_best_move(game_state, valid_moves);
+            break;
+        }
+        case "Stochastic Tree Search":
+        {
+            move = find_stochastic_tree_search_best_move(game_state, valid_moves);
             break;
         }
     }
@@ -269,6 +288,7 @@ function play_ai_turn()
 
     if (move)
     {
+        console.log("HERE");
         game_state.make_move(move);
         made_move = true;
     }

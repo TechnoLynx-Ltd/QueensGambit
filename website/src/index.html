@@ -6,11 +6,12 @@
     <div class="col-lg-5 col-sm" id="canvasdiv">
         <canvas width="512" height="512" id="canvas"></canvas>
 
-        <div id="game_status"></div>
-        <div id="ai_status"></div>
+<div id="game_status"></div>
+    <div id="ai_status"></div>
         <div>
             <button onclick="window.index.minmax_click()">MinMax</button>
             <button onclick="window.index.ann_click()">ANN</button>
+            <button onclick="window.index.sts_click()">Stochastic Tree Search</button>
         </div>
         <div>
             <button onclick="window.index.undo_click()">Undo</button>
@@ -26,9 +27,10 @@
           width: auto;
           height: auto;
           ">
-        </video> 
+        </video>
     </div>
   </div>
+  
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
