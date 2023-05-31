@@ -50,9 +50,14 @@ let ai_type = "";
 let canvasDiv;
 let isHandTracking = false;
 
-export function init()
+export async function init()
 {
     load_model();
+    await init_hand_pose_interface();
+
+    document.getElementById("loader").style.display = "none";
+    document.getElementById("myDiv").style.display = "block";
+
     canvasDiv = document.getElementById("canvasdiv");
     canvas = document.getElementById("canvas");
     canvas.width = Math.floor(canvasDiv.offsetWidth*0.9)
@@ -62,6 +67,8 @@ export function init()
     square_height = Math.floor(canvas.height / dimension);
     canvas.addEventListener("click", board_click);
 
+    
+
     for (let [name, image] of Object.entries(image_map))
     {
         images[name] = new Image(square_width, square_height);
@@ -69,15 +76,16 @@ export function init()
         images[name].src = image;
     }
 
+    
     draw_board();
     display_ai();
     draw_message("Please, choose a type for the AI model");
     valid_moves = game_state.get_valid_moves();
+
 }
 
 export async function turn_on_hand_tracking()
 {
-    await init_hand_pose_interface();
     isHandTracking = true;
     hand_tracking_loop();
 }
