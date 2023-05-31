@@ -56,10 +56,18 @@
 <div id="loader"></div>
 
 <!--
-<div id="loader" class="spinner-border" role="status">
-  <span class="sr-only">Loading...</span>
+<label for="models">Choose an AI model to play with:</label>
+<select name="models" id="models">
+    <option value="sts">Stochastic Tree Search</option>
+    <option value="mm">MinMax</option>
+    <option value="ann">ANN</option>
+</select>
+<div>
+<button type="button" class="btn btn-success">Start Game</button>
 </div>
-
+<div>
+<button type="button" class="btn btn-danger">Reset</button>
+</div>
 -->
 <div style="display:none;" id="boardDiv">
 <div class="container">
