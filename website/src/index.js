@@ -54,10 +54,9 @@ let isHandTracking = false;
 export async function init()
 {
     load_model();
-    await init_hand_pose_interface();
 
     document.getElementById("loader").style.display = "none";
-    document.getElementById("myDiv").style.display = "block";
+    document.getElementById("boardDiv").style.display = "block";
 
     canvasDiv = document.getElementById("canvasdiv");
     canvas = document.getElementById("canvas");
@@ -87,6 +86,7 @@ export async function init()
 
 export async function turn_on_hand_tracking()
 {
+    await init_hand_pose_interface();
     isHandTracking = true;
     hand_tracking_loop();
 }
