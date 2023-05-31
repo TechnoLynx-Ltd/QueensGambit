@@ -11,9 +11,10 @@ const piece_weights =
 
 const checkmate = 1000;
 const stalemate = 0;
-const max_depth = 4;
+const max_depth_minmax = 5;
+const max_depth_sts = 3;
 const GAME_DEPTH = 10;
-const GAMES = 10;
+const GAMES = 20;
 
 function find_random_move(valid_moves)
 {
@@ -62,7 +63,7 @@ export function find_minmax_best_move(game_state, valid_moves)
         find_minmax_move(
             game_state,
             valid_moves,
-            max_depth,
+            max_depth_minmax,
             game_state.white_to_move,
             -checkmate,
             checkmate);
@@ -72,7 +73,6 @@ export function find_minmax_best_move(game_state, valid_moves)
 
 
 export default function weightedRandom(items, weights) {
- console.log("Inside weighted random")
  if (items.length !== weights.length) {
    throw new Error('Items and weights must be of the same size');
  }
@@ -89,17 +89,12 @@ export default function weightedRandom(items, weights) {
 
  const maxCumulativeWeight = cumulativeWeights[cumulativeWeights.length - 1];
  const randomNumber = maxCumulativeWeight * Math.random();
- console.log(cumulativeWeights)
- console.log("CUM weight + Random");
- console.log(maxCumulativeWeight);
- console.log(randomNumber);
 
  for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
    if (cumulativeWeights[itemIndex] >= randomNumber) {
      return items[itemIndex];
    }
  }
- console.log("outside weighted random")
 }
 
 function compareNumbers(a, b) {
@@ -161,8 +156,6 @@ function find_minmax_move(
             }
         }
         let all_scores = Object.keys(scores_moves);
-        console.log("ALL SCORES");
-        console.log(all_scores);
         if(all_scores.length == 0){
             return { score: -checkmate, move: next_move};
         }
@@ -217,8 +210,6 @@ function find_minmax_move(
             }
         }
         let all_scores = Object.keys(scores_moves);
-        console.log("ALL SCORES");
-        console.log(all_scores);
         if(all_scores.length == 0){
             return { score: checkmate, move: next_move};
         }
@@ -227,18 +218,14 @@ function find_minmax_move(
         });
         all_scores = all_scores.sort(compareNumbers);
         all_scores = all_scores.slice(0,Math.min(1, all_scores.length));
-        console.log("ALL SCORES AFTER");
-        console.log(all_scores);
         let weights = new Array(all_scores.length).fill(0);
         let to_add = 0;
         if(all_scores[0] < 0){
             to_add = Math.abs(all_scores[0]);
         }
-        console.log("WEIGHTS");
         for (let i = 0; i < weights.length; i++){
             weights[i] = all_scores[i] + to_add + 1;
         }
-        console.log(weights);
         let chosen_score = weightedRandom(all_scores, weights.reverse());
         return { score: chosen_score, move: scores_moves[chosen_score][0] };
     }
@@ -284,7 +271,7 @@ export function find_stochastic_tree_search_best_move(game_state, valid_moves)
         find_stochastic_tree_search_move(
             game_state,
             valid_moves,
-            max_depth,
+            max_depth_sts,
             game_state.white_to_move,
             -checkmate,
             checkmate);
@@ -318,7 +305,7 @@ function find_stochastic_tree_search_move(
     {   
         let random_game_score = 0;
         for (let i = 0; i<GAMES; i+=1){
-            score += play_random_game(game_state, GAME_DEPTH);
+            random_game_score += play_random_game(game_state, GAME_DEPTH);
         }
         random_game_score /= GAMES;
         return { score: random_game_score};
@@ -345,7 +332,7 @@ function find_stochastic_tree_search_move(
 
             const next_moves = game_state.get_valid_moves();
             const next_move_result =
-                find_minmax_move(
+            find_stochastic_tree_search_move(
                     game_state,
                     next_moves,
                     depth - 1,
@@ -369,8 +356,6 @@ function find_stochastic_tree_search_move(
             }
         }
         let all_scores = Object.keys(scores_moves);
-        console.log("ALL SCORES");
-        console.log(all_scores);
         if(all_scores.length == 0){
             return { score: -checkmate, move: next_move};
         }
@@ -401,7 +386,7 @@ function find_stochastic_tree_search_move(
 
             const next_moves = game_state.get_valid_moves();
             const next_move_result =
-                find_minmax_move(
+            find_stochastic_tree_search_move(
                     game_state,
                     next_moves,
                     depth - 1,
@@ -425,8 +410,6 @@ function find_stochastic_tree_search_move(
             }
         }
         let all_scores = Object.keys(scores_moves);
-        console.log("ALL SCORES");
-        console.log(all_scores);
         if(all_scores.length == 0){
             return { score: checkmate, move: next_move};
         }
@@ -435,18 +418,14 @@ function find_stochastic_tree_search_move(
         });
         all_scores = all_scores.sort(compareNumbers);
         all_scores = all_scores.slice(0,Math.min(1, all_scores.length));
-        console.log("ALL SCORES AFTER");
-        console.log(all_scores);
         let weights = new Array(all_scores.length).fill(0);
         let to_add = 0;
         if(all_scores[0] < 0){
             to_add = Math.abs(all_scores[0]);
         }
-        console.log("WEIGHTS");
         for (let i = 0; i < weights.length; i++){
             weights[i] = all_scores[i] + to_add + 1;
         }
-        console.log(weights);
         let chosen_score = weightedRandom(all_scores, weights.reverse());
         return { score: chosen_score, move: scores_moves[chosen_score][0] };
     }

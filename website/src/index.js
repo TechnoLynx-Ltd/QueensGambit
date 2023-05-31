@@ -229,8 +229,6 @@ function play_ai_turn()
         case "MinMax":
         {
             move = find_minmax_best_move(game_state, valid_moves);
-            console.log("MOVE FOUND");
-            console.log(move);
             break;
         }
         case "ANN":
@@ -249,7 +247,6 @@ function play_ai_turn()
 
     if (move)
     {
-        console.log("HERE");
         game_state.make_move(move);
         made_move = true;
     }
