@@ -66,7 +66,7 @@ export async function init()
     context = canvas.getContext("2d");
     square_width = Math.floor(canvas.width / dimension);
     square_height = Math.floor(canvas.height / dimension);
-    canvas.addEventListener("click", board_click);
+    
     
     for (let [name, image] of Object.entries(image_map))
     {
@@ -77,21 +77,58 @@ export async function init()
 
     
     draw_board();
-    display_ai();
-    draw_message("Please, choose a type for the AI model");
-    valid_moves = game_state.get_valid_moves();
+    draw_message("Select an AI model and press Start Game button to play a game.")
 
 }
 
 export async function start_game()
 {
+    canvas.addEventListener("click", board_click);
+    display_ai();
+    valid_moves = game_state.get_valid_moves();
 
+    var e = document.getElementById("modelsDropDown");
+    var aitype = e.value;
+    start_with_model(aitype)
+}
+
+export async function new_reset_click()
+{
+    canvas.removeEventListener("click", board_click);
+    game_state = new Game_state();
+    valid_moves = game_state.get_valid_moves();
+    selected_square = null;
+    player_clicks = [];
+    made_move = false;
+    game_over = false;
+    ai_type = "";
+    display_ai();
+    draw_message("Select an AI model and press Start Game button to play a game.")
+    display_ai();
+    //refresh_state();
+    draw_game_state()
 }
 
 
+
+function start_with_model(aitype)
+{
+    if (ai_type.length == 0) {
+        ai_type = aitype;
+        display_ai();
+        draw_message("Please, choose a piece to move by clicking on it, then wait for your AI opponent.");
+    }
+    else
+        draw_message("You can't change the type of AI model during the game. Please, press reset and start-over");
+}
+
 export async function turn_on_hand_tracking()
 {
+    document.getElementById("hand_tracking_status").innerHTML =
+    "Hand tracking model is loading in the backgroud...";
     await init_hand_pose_interface();
+    document.getElementById("hand_tracking_status").innerHTML =
+    "Hand tracking model is loaded!";
     isHandTracking = true;
     hand_tracking_loop();
 }
@@ -146,6 +183,7 @@ export function reset_click()
     made_move = false;
     game_over = false;
     ai_type = "";
+    draw_message("Select an AI model and press Start Game button to play a game.")
     display_ai();
 
     refresh_state();

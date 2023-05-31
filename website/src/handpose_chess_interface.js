@@ -16,9 +16,7 @@ export async function init_hand_pose_interface() {
 export async function detect_hand() {
 	hands = await renderResult();
 	if (hands.length > 0) {
-    if(hands.length > 1) {
-      alert("More than 1 hand is visible on the camera! Use only 1 hand to control the game!")
-    }
+
 		var table_coord = calc_table_coord(hands[0]);
         return {'is_hand_present': true, 'is_click': is_click(hands[0]), 'position': table_coord};
     }
