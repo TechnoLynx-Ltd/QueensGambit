@@ -275,9 +275,7 @@ function play_ai_turn()
     {
         case "MinMax":
         {
-            console.log("BEFORE POST");
-            // move = find_minmax_best_move(game_state, valid_moves)
-            my_worker.postMessage(JSON.stringify(game_state));
+            my_worker.postMessage(["MinMax", JSON.stringify(game_state)]);
             break;
         }
         case "ANN":
@@ -287,15 +285,15 @@ function play_ai_turn()
         }
         case "Stochastic Tree Search":
         {
-            move = find_stochastic_tree_search_best_move(game_state, valid_moves);
+            my_worker.postMessage(["STS", JSON.stringify(game_state)]);
             break;
         }
     }
 
-    display_ai("done");
 
     if (move)
     {
+        display_ai("done");
         game_state.make_move(move);
         made_move = true;
     }
@@ -304,16 +302,21 @@ function play_ai_turn()
         draw_message("Could not determine move");
     }
 }
+
 my_worker.onmessage = function(event) {
     console.log(event.data)
     let move = null
     if (event.data[0] == "READY") {
-        console.log(JSON.parse(event.data[1]));
-        move = new Move(JSON.parse(event.data[1]));
+        let retrieved = JSON.parse(event.data[1]);
+        retrieved.board = JSON.parse(event.data[2]).board
+        move = new Move(retrieved.start, retrieved.end, retrieved.board, retrieved.en_passant_move, retrieved.castle_move, retrieved.promote_to);
+        // move = JSON.parse(event.data[1]);
+        // move.__proto__ = Move.prototype
 
     }
     if (move)
     {
+        display_ai("done");
         game_state.make_move(move);
         made_move = true;
     }
@@ -321,6 +324,7 @@ my_worker.onmessage = function(event) {
     {
         draw_message("Could not determine move");
     }
+    refresh_state()
 
 };
 

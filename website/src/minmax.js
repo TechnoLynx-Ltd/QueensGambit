@@ -18,12 +18,17 @@ const GAMES = 20;
 
 self.onmessage = (data) => {
 
-    console.log(data['data']);
-    gs = new Game_state(JSON.parse(data['data']));
+    console.log(data);
+    gs = new Game_state();
+    gs.from_object(JSON.parse(data['data'][1]));
     valid_moves = gs.get_valid_moves();
-    let move = find_minmax_best_move(gs, valid_moves);
-    postMessage(["READY", JSON.stringify(move)]);
-    // unlockUniqueExecution();
+    let move = null; 
+    if(data['data'][0] == "MinMax"){
+        move = find_minmax_best_move(gs, valid_moves);
+    } else{
+        move = find_stochastic_tree_search_best_move(gs, valid_moves);
+    }
+    postMessage(["READY", JSON.stringify(move), JSON.stringify(gs)]);
 };
 
 function find_random_move(valid_moves)
@@ -67,7 +72,7 @@ function find_greedy_move(game_state, valid_moves, is_ai_white)
     return best_move;
 }
 
-export function find_minmax_best_move(game_state, valid_moves)
+function find_minmax_best_move(game_state, valid_moves)
 {
     const next_move_result =
         find_minmax_move(
@@ -82,7 +87,7 @@ export function find_minmax_best_move(game_state, valid_moves)
 }
 
 
-export default function weightedRandom(items, weights) {
+function weightedRandom(items, weights) {
  if (items.length !== weights.length) {
    throw new Error('Items and weights must be of the same size');
  }
@@ -259,7 +264,7 @@ function score_material(board, is_ai_white)
     return score;
 }
 
-export function score_board(game_state, is_ai_white)
+function score_board(game_state, is_ai_white)
 {
     const weight = game_state.white_to_move ? 1 : -1;
 
@@ -275,7 +280,7 @@ export function score_board(game_state, is_ai_white)
     return score_material(game_state.board, is_ai_white);
 }
 
-export function find_stochastic_tree_search_best_move(game_state, valid_moves)
+function find_stochastic_tree_search_best_move(game_state, valid_moves)
 {
     const next_move_result =
         find_stochastic_tree_search_move(
@@ -442,7 +447,7 @@ function find_stochastic_tree_search_move(
 }
 
 
-export class Game_state {
+class Game_state {
     constructor() {
         this.board =
             [
@@ -511,6 +516,67 @@ export class Game_state {
         this.checks = [];
         this.checkmate = false;
         this.stalemate = false;
+        this.promotion_pieces = ['Q', 'R', 'B', 'N'];
+    }
+
+    from_object(object) {
+        this.board = object.board;
+
+
+        this.position_dict =
+        {
+            "wP": 0,
+            "wR": 1,
+            "wN": 2,
+            "wB": 3,
+            "wQ": 4,
+            "wK": 5,
+            "bP": 6,
+            "bR": 7,
+            "bN": 8,
+            "bB": 9,
+            "bQ": 10,
+            "bK": 11
+        };
+
+        this.knight_offsets =
+            [
+                [2, 1],
+                [2, -1],
+                [1, 2],
+                [1, -2],
+                [-1, 2],
+                [-1, -2],
+                [-2, -1],
+                [-2, 1]
+            ];
+
+        this.rook_moves = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        this.bishop_moves = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+        this.all_directions = this.rook_moves.concat(this.bishop_moves);
+
+        this.move_methods = {
+            'P': this.get_pawn_moves,
+            'R': this.get_rook_moves,
+            'N': this.get_knight_moves,
+            'B': this.get_bishop_moves,
+            'Q': this.get_queen_moves,
+            'K': this.get_king_moves
+        };
+
+        this.current_castle_rights = new Castle_rights(object.current_castle_rights);
+        this.white_to_move = object.white_to_move;
+        this.move_log = object.move_log;
+        this.white_king_location = object.white_king_location;
+        this.black_king_location = object.black_king_location;
+        this.en_passant_location = object.en_passant_location;
+        this.castle_rights_log =
+            [JSON.parse(JSON.stringify(this.current_castle_rights))];
+        this.in_check = object.in_check;
+        this.pins = object.pins;
+        this.checks = object.checks;
+        this.checkmate = object.checkmate;
+        this.stalemate = object.stalemate;
         this.promotion_pieces = ['Q', 'R', 'B', 'N'];
     }
 
@@ -1201,7 +1267,7 @@ export class Game_state {
     }
 }
 
-export class Move {
+class Move {
     constructor(start, end, board, en_passant_move = false, castle_move = false, promote_to = 'Q') {
         this.start = start;
         this.end = end;
