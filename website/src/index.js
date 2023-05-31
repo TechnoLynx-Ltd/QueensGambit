@@ -17,7 +17,6 @@ import wR from "../../resources/images/wR.png";
 import wQ from "../../resources/images/wQ.png";
 import wP from "../../resources/images/wP.png";
 
-
 let image_map =
 {
     "bB": bB,
@@ -249,6 +248,7 @@ function highlight_square()
         }
     }
 }
+let my_worker = new Worker(new URL('./minmax.js', import.meta.url));
 
 function draw_game_state()
 {
@@ -267,7 +267,9 @@ function play_ai_turn()
     {
         case "MinMax":
         {
-            move = find_minmax_best_move(game_state, valid_moves);
+            console.log("BEFORE POST");
+            // move = find_minmax_best_move(game_state, valid_moves)
+            my_worker.postMessage(JSON.stringify(game_state));
             break;
         }
         case "ANN":
@@ -294,6 +296,25 @@ function play_ai_turn()
         draw_message("Could not determine move");
     }
 }
+my_worker.onmessage = function(event) {
+    console.log(event.data)
+    let move = null
+    if (event.data[0] == "READY") {
+        console.log(JSON.parse(event.data[1]));
+        move = new Move(JSON.parse(event.data[1]));
+
+    }
+    if (move)
+    {
+        game_state.make_move(move);
+        made_move = true;
+    }
+    else
+    {
+        draw_message("Could not determine move");
+    }
+
+};
 
 function refresh_state()
 {
