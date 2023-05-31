@@ -1,6 +1,8 @@
 import { Game_state, Move } from "./engine.js";
 import { find_minmax_best_move, find_stochastic_tree_search_best_move } from "./minmax.js";
 import { load_model, find_model_best_move } from "./ann.js";
+import { init_hand_pose_interface, detect_hand } from "./handpose_chess_interface.js"
+
 
 import bB from "../../resources/images/bB.png";
 import bK from "../../resources/images/bK.png";
@@ -47,6 +49,7 @@ let game_over = false;
 let made_move = false;
 let ai_type = "";
 let canvasDiv;
+let isHandTracking = false;
 
 export function init()
 {
@@ -71,6 +74,42 @@ export function init()
     display_ai();
     draw_message("Please, choose a type for the AI model");
     valid_moves = game_state.get_valid_moves();
+}
+
+export async function turn_on_hand_tracking()
+{
+    await init_hand_pose_interface();
+    isHandTracking = true;
+    hand_tracking_loop();
+}
+
+
+async function hand_tracking_loop() {
+    if(isHandTracking) {
+        var hand_detection = await detect_hand();
+        if(hand_detection['is_hand_present'] == true) {
+            if(hand_detection['is_click'] == true) {
+                await board_click2([hand_detection['position'][1], hand_detection['position'][0]])
+            }
+            draw_game_state();
+            highlight_hand_position(hand_detection['position']);
+            
+        }
+        requestAnimationFrame(hand_tracking_loop)
+    }
+}
+
+function highlight_hand_position(hand_position) {
+    let row = hand_position[1];
+    let column = hand_position[0];
+
+    context.globalAlpha = 0.5;
+    context.fillStyle = "Yellow";
+    context.fillRect(
+        column * square_width,
+        row * square_height,
+        square_width,
+        square_height);
 }
 
 export function undo_click()
@@ -295,13 +334,8 @@ function refresh_state()
     draw_game_state();
 }
 
-function play_human_turn()
+function play_human_turn(clicked_square)
 {
-    let coordinate_x = event.clientX - canvas.offsetLeft;
-    let coordinate_y = event.clientY - canvas.offsetTop;
-    let square_x = Math.floor(coordinate_x / square_width);
-    let square_y = Math.floor(coordinate_y / square_height);
-    let clicked_square = [square_y, square_x];
 
     if (
         Array.isArray(selected_square) &&
@@ -347,6 +381,29 @@ function delay(milliseconds){
     });
 }
 
+async function board_click2(clicked_square)
+{
+    if (game_over)
+    {
+        return;
+    }
+
+    let is_white_human_turn = (game_state.white_to_move && !white_ai);
+    let is_black_human_turn = (!game_state.white_to_move && !black_ai);
+
+    if (is_white_human_turn || is_black_human_turn)
+    {       
+        play_human_turn(clicked_square);
+        let human_finished = made_move;
+        refresh_state();
+        if(human_finished){
+            await delay(500);
+            play_ai_turn();
+        }
+        refresh_state();
+    }
+}
+
 async function board_click(event)
 {
     if (game_over)
@@ -359,7 +416,13 @@ async function board_click(event)
 
     if (is_white_human_turn || is_black_human_turn)
     {
-        play_human_turn();
+        let coordinate_x = event.clientX - canvas.offsetLeft;
+        let coordinate_y = event.clientY - canvas.offsetTop;
+        let square_x = Math.floor(coordinate_x / square_width);
+        let square_y = Math.floor(coordinate_y / square_height);
+        let clicked_square = [square_y, square_x];
+
+        play_human_turn(clicked_square);
         let human_finished = made_move;
         refresh_state();
         if(human_finished){
