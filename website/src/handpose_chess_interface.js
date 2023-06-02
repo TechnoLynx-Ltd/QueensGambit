@@ -16,6 +16,7 @@ export async function init_hand_pose_interface() {
 export async function detect_hand() {
 	hands = await renderResult();
 	if (hands.length > 0) {
+
 		var table_coord = calc_table_coord(hands[0]);
         return {'is_hand_present': true, 'is_click': is_click(hands[0]), 'position': table_coord};
     }
@@ -26,8 +27,18 @@ export async function detect_hand() {
 
 function is_click(hand) {
 	// click if dip is lower than pip
-	var click = hand["keypoints"][6]['y'] <hand["keypoints"][7]['y'];
-	var result = !prev_is_click && hand["keypoints"][6]['y'] <hand["keypoints"][7]['y']
+	//var click = hand["keypoints"][6]['y'] <hand["keypoints"][7]['y'];
+
+  // hand["keypoints"][7]['y'] - hand["keypoints"][6]['y'] > 0 then it's a click
+  
+  var index_dist = hand["keypoints"][7]['y'] - hand["keypoints"][6]['y']
+  var middle_dist = hand["keypoints"][11]['y'] - hand["keypoints"][10]['y']
+  var ring_dist = hand["keypoints"][15]['y'] - hand["keypoints"][14]['y']
+  var pinky_dist = hand["keypoints"][19]['y'] - hand["keypoints"][18]['y']
+
+  var dists = index_dist + middle_dist + ring_dist + pinky_dist
+  var click = dists > 0;
+	var result = !prev_is_click && click
 	prev_is_click = click;
 	return result;
 	

@@ -2,6 +2,11 @@
 <head>
     <style>
         /* Center the loader */
+        .btn:focus {
+        outline: none;
+        box-shadow: none;
+        }
+
         #loader {
           position: absolute;
           left: 50%;
@@ -53,25 +58,35 @@
     </style>
 </head>
 <body onload="window.index.init()">
-
 <div id="loader"></div>
 
-<!--
-<div id="loader" class="spinner-border" role="status">
-  <span class="sr-only">Loading...</span>
+<div style="display:none;" id="boardDiv">
+<label for="models">AI model:</label>
+<select name="models" id="modelsDropDown">
+    <option value="Stochastic Tree Search">Stochastic Tree Search</option>
+    <option value="MinMax">MinMax</option>
+    <option value="ANN">ANN</option>
+</select>
+<div>
+<button type="button"  onclick="window.index.start_game()">Start Game</button>
 </div>
+<div>
+<button type="button" onclick="window.index.new_reset_click()">Reset</button>
+</div>
+<div>
+    <button onclick="window.index.turn_on_hand_tracking()">Hand tracking</button>
+</div> 
 
--->
 
-<div style="display:none;" id="myDiv">
 <div class="container">
   <div class="row">
     <div class="col-lg-5 col-sm" id="canvasdiv">
         <canvas width="512" height="512" id="canvas"></canvas>
 
         <div id="game_status"></div>
+        <div id="hand_tracking_status"></div>
             <div id="ai_status"></div>
-                <div>
+                <!--<div>
                     <button onclick="window.index.minmax_click()">MinMax</button>
                     <button onclick="window.index.ann_click()">ANN</button>
                     <button onclick="window.index.sts_click()">Stochastic Tree Search</button>
@@ -79,10 +94,8 @@
                 <div>
                     <button onclick="window.index.undo_click()">Undo</button>
                     <button onclick="window.index.reset_click()">Reset</button>
-                </div>
-                <div>
-                    <button onclick="window.index.turn_on_hand_tracking()">Hand tracking</button>
-                </div> 
+                </div>-->
+                
                 <video hidden="hidden" id="video" playsinline style="
                   -webkit-transform: scaleX(-1);
                   transform: scaleX(-1);
